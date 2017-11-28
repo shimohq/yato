@@ -93,28 +93,33 @@ const startTicker = (buckets = [], opts = {}) => {
 }
 
 const stateExecuteCommand = (s, timeoutDuration) => (command, buckets) => {
-  let timeout
   const increment = prop => {
-    if (!timeout) {
-      return
-    }
     buckets[buckets.length - 1][prop]++
     s.updateState(buckets)
-    clearTimeout(timeout)
-    timeout = null
   }
-  // 记录超时情况，成功或者失败的情况在超时时间之内返回，则不记录超时
-  timeout = setTimeout(() => increment('timeouts'), timeoutDuration)
+  const commandPromise = command()
+  const timeoutPromise = new Promise(resolve => {
+    setTimeout(() => resolve('request timeout'), timeoutDuration)
+  })
 
-  return command()
-    .then(data => {
-      increment('successes')
-      return data
-    })
-    .catch(error => {
-      increment('failures')
-      return Promise.reject(error)
-    })
+  // command 和 timeout 竞争
+  return Promise.race([
+    commandPromise,
+    timeoutPromise
+  ]).then(data => {
+    if (data === 'request timeout') {
+      // 记录超时情况，成功或者失败的情况在超时时间之内返回，则不记录超时
+      increment('timeouts')
+      return commandPromise
+    }
+    // 记录成功
+    increment('successes')
+    return data
+  }).catch(error => {
+    // 记录失败
+    increment('failures')
+    return Promise.reject(error)
+  })
 }
 
 class Hystrix {
@@ -139,7 +144,6 @@ class Hystrix {
       // 非关闭状态，执行请求，并将其执行状况记录到最后一个 bucket 里
       return this._executeCommand(command, this._buckets)
     }
-    process.exit()
     fallback && fallback()
     curBucket.shortCircuits++
     throw new Error('请求失败')
