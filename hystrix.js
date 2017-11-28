@@ -130,6 +130,7 @@ class Hystrix {
     this.opts.numBuckets = opts.numBuckets || 10 // number
     this.opts.timeoutDuration = opts.timeoutDuration || 3000 // ms
     this.opts.errorThreshold = opts.errorThreshold || 50 // percentage
+    this.opts.volumeThreshold = opts.volumeThreshold || 5 // 超过这个量的请求数量，bucket 数据才有意义
 
     this._buckets = [createBucket()]
 
