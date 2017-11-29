@@ -150,7 +150,7 @@ class Hystrix {
     throw new Error('请求失败')
   }
   isOpen () {
-    return this._state.isOpen
+    return this._state.isOpen()
   }
 }
 
