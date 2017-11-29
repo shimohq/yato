@@ -1,5 +1,5 @@
 const test = require('ava')
-const Hystrix = require('../hystrix')
+const Hystrix = require('../')
 
 const OPEN = 0
 const HALF_OPEN = 1
@@ -40,9 +40,15 @@ test('With timeout command', async t => {
 })
 
 test('With a broken service', async t => {
-  const hystrix = new Hystrix()
+  let closedEvent = false
+  const hystrix = new Hystrix({
+    onClosed (metrics) {
+      closedEvent = true
+    }
+  })
   // timeout 导致的 OPEN
   t.is(hystrix.isOpen(), false)
+  // 100% 错误, 但是低于要求的衡量请求数
   await Promise.all([
     hystrix.run(timeoutCommand),
     hystrix.run(timeoutCommand),
@@ -78,20 +84,23 @@ test('With a broken service', async t => {
     }, 10000)
   })
   // 请求成功，切换到 CLOSED
+  t.is(closedEvent, false)
   await hystrix.run(success)
+  t.is(closedEvent, true)
   t.is(hystrix._state.getState(), CLOSED, 'should switch to CLOSED')
 
-  // fail 导致的 OPEN
   t.is(hystrix.isOpen(), false)
+  // 产生 OPEN 状态
   await Promise.all([
-    hystrix.run(fail),
-    hystrix.run(fail),
-    hystrix.run(fail),
-    hystrix.run(fail),
-    hystrix.run(fail),
-    hystrix.run(fail)
+    hystrix.run(timeoutCommand),
+    hystrix.run(timeoutCommand),
+    hystrix.run(timeoutCommand),
+    hystrix.run(timeoutCommand),
+    hystrix.run(timeoutCommand),
+    hystrix.run(timeoutCommand)
   ])
   t.is(hystrix.isOpen(), true)
+
   await new Promise(resolve => {
     setTimeout(() => {
       t.is(hystrix._state.getState(), HALF_OPEN, 'should switch to HALF_OPEN')
@@ -99,25 +108,78 @@ test('With a broken service', async t => {
     }, 10000)
   })
   // 请求失败, 切换到 OPEN
-  await hystrix.run(fail)
-  t.is(hystrix._state.getState(), OPEN, 'should switch to OPEN')
+  try {
+    await hystrix.run(fail)
+  } catch (error) {
+    t.is(hystrix._state.getState(), OPEN, 'should switch to OPEN')
+  }
 })
 
-test('isOpen should be false if errors are below the errorThreshold', async t => {
+test('isOpen should be true if errors are below the errorThreshold', async t => {
   const hystrix = new Hystrix({
     errorThreshold: 75
   })
   await Promise.all([
-    hystrix.run(fail),
-    hystrix.run(fail),
-    hystrix.run(fail),
-    hystrix.run(fail),
-    hystrix.run(fail),
-    hystrix.run(fail),
-    hystrix.run(fail),
+    hystrix.run(timeoutCommand),
+    hystrix.run(timeoutCommand),
+    hystrix.run(success),
+    hystrix.run(success),
+    hystrix.run(success),
     hystrix.run(success),
     hystrix.run(success),
     hystrix.run(success)
   ])
+  t.is(hystrix.isOpen(), false)
+})
+
+test('isOpen should be false if errors are above the errorThreshold', async t => {
+  const hystrix = new Hystrix({
+    errorThreshold: 75
+  })
+  await Promise.all([
+    hystrix.run(timeoutCommand),
+    hystrix.run(timeoutCommand),
+    hystrix.run(timeoutCommand),
+    hystrix.run(timeoutCommand),
+    hystrix.run(timeoutCommand),
+    hystrix.run(timeoutCommand),
+    hystrix.run(timeoutCommand),
+    hystrix.run(timeoutCommand),
+    hystrix.run(success),
+    hystrix.run(success)
+  ])
   t.is(hystrix.isOpen(), true)
+})
+
+test('timeouts metrics === failures metrics', async t => {
+  const metricsList = []
+  const timeoutHystrix = new Hystrix({
+    onOpen (metrics) {
+      metricsList.push(metrics)
+    }
+  })
+  await Promise.all([
+    timeoutHystrix.run(timeoutCommand),
+    timeoutHystrix.run(timeoutCommand),
+    timeoutHystrix.run(timeoutCommand),
+    timeoutHystrix.run(timeoutCommand),
+    timeoutHystrix.run(timeoutCommand),
+    timeoutHystrix.run(timeoutCommand)
+  ])
+
+  const failuresHystrix = new Hystrix({
+    onOpen (metrics) {
+      metricsList.push(metrics)
+    }
+  })
+  await Promise.all([
+    failuresHystrix.run(fail).catch(() => 'error'),
+    failuresHystrix.run(fail).catch(() => 'error'),
+    failuresHystrix.run(fail).catch(() => 'error'),
+    failuresHystrix.run(fail).catch(() => 'error'),
+    failuresHystrix.run(fail).catch(() => 'error'),
+    failuresHystrix.run(fail).catch(() => 'error')
+  ])
+  t.is(metricsList[0].errorCount, metricsList[1].errorCount)
+  t.is(metricsList[0].getErrorPercentage(), metricsList[1].getErrorPercentage())
 })
