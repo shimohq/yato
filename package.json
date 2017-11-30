@@ -6,7 +6,11 @@
   "scripts": {
     "test": "nyc --reporter=html --reporter=text ava"
   },
-  "keywords": ["node", "hystrix", "circuit breaker"],
+  "keywords": [
+    "node",
+    "hystrix",
+    "circuit breaker"
+  ],
   "author": "Lever",
   "license": "ISC",
   "dependencies": {},

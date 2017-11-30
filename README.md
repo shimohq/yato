@@ -11,7 +11,9 @@ npm install shimo-hystrix
 
 ```JavaScript
 const Hystrix = require('shimo-hystrix')
-const hystrix = new Hystrix()
+const hystrix = new Hystrix({
+ // config...
+})
 
 hystrix
   .run(() => Promise.reslove(1))
@@ -51,3 +53,23 @@ command 是一个会返回 Promise 的回调函数，在断路器处于非打开
 多久没响应算超时
 
 默认值为 3000，单位也是 ms
+
+### errorThreshold
+
+错误率阈值。
+
+出错次数 = 响应出错次数 + 响应超时次数
+
+错误率 = (出错次数 / 请求总次数) * 100
+
+shimo-hystrix 会在每个请求结束或者超时后，更新断路器的状态，指标之一就是错误率，一旦错误率高于指定的阈值，断路器就会被打开。
+
+默认值为 50
+
+### volumeThreshold
+
+请求量阈值。
+
+比如某段时间内，只有一个请求，且这个请求失败或者超时了，我们不希望这个时候就判定该服务 100% 不健康，因此设定了这个选项，只有总请求次数超过了这个值，我们统计的错误率才有意义。
+
+默认值为 5

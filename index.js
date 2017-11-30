@@ -147,7 +147,7 @@ class Hystrix {
     }
     fallback && fallback()
     curBucket.shortCircuits++
-    throw new Error('请求失败')
+    throw new Error('Bad Request!')
   }
   isOpen () {
     return this._state.isOpen()

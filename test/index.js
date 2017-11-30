@@ -63,7 +63,7 @@ test('With a broken service', async t => {
     await hystrix.run(timeoutCommand)
     t.fail('should not run the command')
   } catch (error) {
-    t.is(error.message, '请求失败')
+    t.is(error.message, 'Bad Request!')
     t.is(hystrix._buckets[hystrix._buckets.length - 1].shortCircuits, 1, 'should record a short circuit')
   }
 
