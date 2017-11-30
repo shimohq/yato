@@ -22,25 +22,25 @@ hystrix
 
 ## API
 
-### run(command, [fallback])
+#### run(command, [fallback])
 
 run 函数接受两个参数，第一个参数是要监控的指令，第二个参数时当断路器打开时需要执行的回退操作。
 
 command 是一个会返回 Promise 的回调函数，在断路器处于非打开状态时，run 函数会返回 command 执行产生的 Promise。
 
-### isOpen()
+#### isOpen()
 
 返回当前断路器是否处于打开状态
 
 ## Config
 
-### windowDuration
+#### windowDuration
 
 这个配置十分重要，它决定着一个 bucket 可以存在多久，以及断路器打开多久后切换为半打开状态
 
 默认值为 10000，哦对了，这个值的单位是 ms
 
-### numBuckets
+#### numBuckets
 
 最多可以存在多少 bucket
 
@@ -48,13 +48,13 @@ command 是一个会返回 Promise 的回调函数，在断路器处于非打开
 
 根据 windowDuration 和 numBuckets 可以计算出每隔多久应该产生一个 bucket
 
-### timeoutDuration
+#### timeoutDuration
 
 多久没响应算超时
 
 默认值为 3000，单位也是 ms
 
-### errorThreshold
+#### errorThreshold
 
 错误率阈值。
 
@@ -66,7 +66,7 @@ shimo-hystrix 会在每个请求结束或者超时后，更新断路器的状态
 
 默认值为 50
 
-### volumeThreshold
+#### volumeThreshold
 
 请求量阈值。
 
