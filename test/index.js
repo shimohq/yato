@@ -33,9 +33,9 @@ test('With a working service', async t => {
 test('With timeout command', async t => {
   const hystrix = new Hystrix()
   const result = await hystrix.run(timeoutCommand)
-  const bucket = hystrix._buckets[hystrix._buckets.length - 1]
+  const buckets = hystrix._buckets
   t.is(result, true, 'should get command result when command is timeout')
-  t.is(bucket.timeouts, 1, 'should record a timeout if not a success or failure')
+  t.is(buckets.reduce((result, bucket) => result + bucket.timeouts, 0), 1, 'should record a timeout if not a success or failure')
   t.is(hystrix._buckets.reduce((result, item) => result + item.successes, 0), 0, 'should not record a success when there is a timeout')
 })
 
