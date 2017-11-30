@@ -1,4 +1,7 @@
 # shimo-hystrix
+
+[![Build Status](https://travis-ci.org/shimohq/shimo-hystrix.svg?branch=master)](https://travis-ci.org/shimohq/shimo-hystrix)
+
 石墨服务断路器
 
 ## Install
