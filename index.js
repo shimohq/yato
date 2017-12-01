@@ -145,8 +145,10 @@ class Hystrix {
       // 非关闭状态，执行请求，并将其执行状况记录到最后一个 bucket 里
       return this._executeCommand(command, this._buckets)
     }
-    fallback && fallback()
     curBucket.shortCircuits++
+    if (fallback) {
+      return fallback()
+    }
     throw new Error('Bad Request!')
   }
   isOpen () {

@@ -67,13 +67,9 @@ test('With a broken service', async t => {
     t.is(hystrix._buckets[hystrix._buckets.length - 1].shortCircuits, 1, 'should record a short circuit')
   }
 
-  let count = 0
-  const fallback = () => count++
-  try {
-    await hystrix.run(timeoutCommand, fallback)
-  } catch (error) {
-    t.is(count, 1, 'should run the fallback if one is provided')
-  }
+  const fallback = () => 1
+  const count = await hystrix.run(timeoutCommand, fallback)
+  t.is(count, 1, 'should run the fallback and return its result if one is provided')
 
   // 一段时间后切换到 HALF_OPEN
   t.is(hystrix._state.getState(), OPEN)
