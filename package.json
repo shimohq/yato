@@ -13,7 +13,9 @@
   ],
   "author": "Lever",
   "license": "ISC",
-  "dependencies": {},
+  "dependencies": {
+    "lodash": "^4.17.4"
+  },
   "devDependencies": {
     "ava": "^0.24.0",
     "nyc": "^11.3.0",

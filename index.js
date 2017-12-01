@@ -218,7 +218,7 @@ class Hystrix {
     return this._state.isOpen()
   }
   getStats () {
-    return generateStats(this._state.getState(), calculateMetrics(this._buckets), this._buckets)
+    return generateStats(stateMap.get(this._state.getState()), calculateMetrics(this._buckets), this._buckets)
   }
 }
 

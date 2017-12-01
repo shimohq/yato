@@ -1,5 +1,6 @@
 const test = require('ava')
 const Hystrix = require('../')
+const _ = require('lodash')
 
 const OPEN = 0
 const HALF_OPEN = 1
@@ -178,4 +179,34 @@ test('timeouts metrics === failures metrics', async t => {
   ])
   t.is(metricsList[0].errorCount, metricsList[1].errorCount)
   t.is(metricsList[0].errorPercentage, metricsList[1].errorPercentage)
+})
+
+test('should get right stats data', async t => {
+  let stats = {}
+  const hystrix = new Hystrix({
+    collectors: [data => (stats = data)]
+  })
+  await Promise.all([
+    hystrix.run(success),
+    hystrix.run(success),
+    hystrix.run(fail).catch(() => 'error'),
+    hystrix.run(fail).catch(() => 'error'),
+    hystrix.run(timeoutCommand),
+    hystrix.run(timeoutCommand),
+    hystrix.run(timeoutCommand),
+    hystrix.run(success),
+    hystrix.run(fail).catch(() => 'error')
+  ])
+  const should = {
+    state: 'OPEN',
+    totalCount: 9,
+    errorCount: 6,
+    failures: 3,
+    successes: 3,
+    timeouts: 3,
+    shortCircuits: 0,
+    errorPercentage: (6 / 9) * 100
+  }
+  t.deepEqual(hystrix.getStats(), stats)
+  t.deepEqual(_.pick(stats, ['state', 'totalCount', 'errorCount', 'failures', 'successes', 'timeouts', 'shortCircuits', 'errorPercentage']), should)
 })
