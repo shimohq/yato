@@ -35,6 +35,52 @@ command 是一个会返回 Promise 的回调函数，在断路器处于非打开
 
 返回当前断路器是否处于打开状态
 
+#### getStats()
+
+计算并返回当前的统计数据。
+
+```JSON
+{
+  "state": "OPEN",
+  "latencyMean": 560,
+  "percentiles": {
+    "25": 200,
+    "50": 200,
+    "75": 300,
+    "90": 500,
+    "95": 500,
+    "99.5": 500,
+    "100": 3000
+  },
+  "totalCount": 10,
+  "errorCount": 7,
+  "failures": 6,
+  "timeouts": 1,
+  "successes": 3,
+  "shortCircuits": 0,
+  "errorPercentage": 70
+}
+```
+state -> 表示断路器当前的状态，可能值为: "OPEN", "HALF_OPEN", "CLOSED"
+
+latencyMean -> 平均响应时间 = 总响应时间 / 总请求数
+
+percentiles -> 响应时间百分比，抽取了几个关键数据，上面的例子中表示，50% 的请求延迟在 200ms 以下，75% 的请求延迟在 300ms 以下， 99.5% 的请求延迟在 500ms 以下。总共请求了 10 次的话可以得出，有 5 次请求在 200 ms 以下，有两次在 200 ~ 300ms 之间，有两次在 300ms ~ 500ms 之间，有一次超时请求用了 3000ms。
+
+totalCount -> 总请求次数
+
+errorCount -> 总失败次数 = failures + timeouts
+
+failures -> 请求返回错误次数
+
+timeouts -> 请求超时次数
+
+successes -> 请求成功次数
+
+shortCircuits -> 跳过请求直接返回失败或者 fallback 次数
+
+errorPercentage -> 请求失败率 = errorCount / totalCount
+
 ## Config
 
 #### windowDuration
@@ -76,6 +122,12 @@ shimo-hystrix 会在每个请求结束或者超时后，更新断路器的状态
 比如某段时间内，只有一个请求，且这个请求失败或者超时了，我们不希望这个时候就判定该服务 100% 不健康，因此设定了这个选项，只有总请求次数超过了这个值，我们统计的错误率才有意义。
 
 默认值为 5
+
+#### collectors
+
+数据收集器，由使用者指定收集数据的程序。它是一个数组，这个数组是一个收集器队列，每次请求进来会触发收集器队列挨个收集请求产生的统计数据。
+
+对单个的收集器 (collector) 来说，是一个接受统计数据的函数，通过收集器我们可以获得该请求结束后最新的统计数据。至于统计数据的结构与 [getStats()](#getStats()) API 返回的数据结构一致。
 
 ## 关于断路器
 
