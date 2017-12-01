@@ -209,4 +209,6 @@ test('should get right stats data', async t => {
   }
   t.deepEqual(hystrix.getStats(), stats)
   t.deepEqual(_.pick(stats, ['state', 'totalCount', 'errorCount', 'failures', 'successes', 'timeouts', 'shortCircuits', 'errorPercentage']), should)
+  t.true(_.isNumber(stats.latencyMean))
+  Object.values(stats.percentiles).forEach(value => t.true(_.isNumber(value)))
 })
