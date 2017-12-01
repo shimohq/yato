@@ -177,5 +177,5 @@ test('timeouts metrics === failures metrics', async t => {
     failuresHystrix.run(fail).catch(() => 'error')
   ])
   t.is(metricsList[0].errorCount, metricsList[1].errorCount)
-  t.is(metricsList[0].getErrorPercentage(), metricsList[1].getErrorPercentage())
+  t.is(metricsList[0].errorPercentage, metricsList[1].errorPercentage)
 })
