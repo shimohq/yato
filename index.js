@@ -212,7 +212,8 @@ class Hystrix {
       const result = fallback()
       return Object.prototype.toString.call(result).slice(8, -1) === 'Promise' ? result : Promise.resolve(result)
     }
-    throw new Error('Bad Request!')
+
+    return Promise.reject(new Error('Bad Request!'))
   }
   isOpen () {
     return this._state.isOpen()

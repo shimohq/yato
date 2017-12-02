@@ -60,13 +60,9 @@ test('With a broken service', async t => {
   t.is(hystrix.isOpen(), false, 'isOpen should be false if requests are below the volumeThreshold')
   await hystrix.run(timeoutCommand)
   t.is(hystrix.isOpen(), true, 'isOpen should be true if requests are above the volumeThreshold')
-  try {
-    await hystrix.run(timeoutCommand)
-    t.fail('should not run the command')
-  } catch (error) {
-    t.is(error.message, 'Bad Request!')
-    t.is(hystrix._buckets[hystrix._buckets.length - 1].shortCircuits, 1, 'should record a short circuit')
-  }
+
+  await t.throws(hystrix.run(timeoutCommand), 'Bad Request!')
+  t.is(hystrix._buckets[hystrix._buckets.length - 1].shortCircuits, 1, 'should record a short circuit')
 
   const fallback = () => 1
   const count = await hystrix.run(timeoutCommand, fallback)
