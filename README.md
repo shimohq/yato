@@ -150,3 +150,6 @@ https://github.com/Netflix/Hystrix
 
 https://github.com/yammer/circuit-breaker-js
 
+## License
+
+MIT
