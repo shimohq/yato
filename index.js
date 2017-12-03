@@ -211,7 +211,8 @@ class Hystrix {
     if (fallback) {
       return Promise.resolve(fallback())
     }
-    throw new Error('Bad Request!')
+
+    return Promise.reject(new Error('Bad Request!'))
   }
   isOpen () {
     return this._state.isOpen()
