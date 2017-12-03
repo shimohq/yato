@@ -209,8 +209,7 @@ class Hystrix {
     }
     curBucket.shortCircuits++
     if (fallback) {
-      const result = fallback()
-      return Object.prototype.toString.call(result).slice(8, -1) === 'Promise' ? result : Promise.resolve(result)
+      return Promise.resolve(fallback())
     }
     throw new Error('Bad Request!')
   }

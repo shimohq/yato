@@ -1,6 +1,7 @@
 const test = require('ava')
 const Hystrix = require('../')
 const _ = require('lodash')
+const isPromise = require('is-promise')
 
 const OPEN = 0
 const HALF_OPEN = 1
@@ -69,7 +70,9 @@ test('With a broken service', async t => {
   }
 
   const fallback = () => 1
-  const count = await hystrix.run(timeoutCommand, fallback)
+  const runResult = hystrix.run(timeoutCommand, fallback)
+  t.true(isPromise(runResult), 'fallback result should be a Promise')
+  const count = await runResult
   t.is(count, 1, 'should run the fallback and return its result if one is provided')
 
   // 一段时间后切换到 HALF_OPEN
