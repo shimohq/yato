@@ -131,12 +131,12 @@ const stateExecuteCommand = (s, timeoutDuration) => (command, buckets) => {
     if (data === 'request timeout') {
       // 记录超时情况，成功或者失败的情况在超时时间之内返回，则不记录超时
       increment('timeouts', getRunTime())
-      return commandPromise
+      return Promise.reject(new Error('Timeout'))
     }
     // 记录成功
     increment('successes', getRunTime())
     return data
-  }).catch(error => {
+  }, error => {
     // 记录失败
     increment('failures', getRunTime())
     return Promise.reject(error)
@@ -206,6 +206,8 @@ class Hystrix {
     if (!this._state.isOpen()) {
       // 非关闭状态，执行请求，并将其执行状况记录到最后一个 bucket 里
       return this._executeCommand(command, this._buckets)
+        // 如果超时或者响应失败，执行 fallback
+        .catch(error => fallback ? fallback() : Promise.reject(error))
     }
     curBucket.shortCircuits++
     if (fallback) {

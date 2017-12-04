@@ -34,9 +34,9 @@ test('With a working service', async t => {
 
 test('With timeout command', async t => {
   const hystrix = new Hystrix()
-  const result = await hystrix.run(timeoutCommand)
+  const result = await hystrix.run(timeoutCommand, () => 1)
   const buckets = hystrix._buckets
-  t.is(result, true, 'should get command result when command is timeout')
+  t.is(result, 1, 'should get fallback result when command is timeout')
   t.is(buckets.reduce((result, bucket) => result + bucket.timeouts, 0), 1, 'should record a timeout if not a success or failure')
   t.is(hystrix._buckets.reduce((result, item) => result + item.successes, 0), 0, 'should not record a success when there is a timeout')
 })
@@ -52,14 +52,14 @@ test('With a broken service', async t => {
   t.is(hystrix.isOpen(), false)
   // 100% 错误, 但是低于要求的衡量请求数
   await Promise.all([
-    hystrix.run(timeoutCommand),
-    hystrix.run(timeoutCommand),
-    hystrix.run(timeoutCommand),
-    hystrix.run(timeoutCommand),
-    hystrix.run(timeoutCommand)
+    hystrix.run(timeoutCommand, () => 1),
+    hystrix.run(timeoutCommand, () => 1),
+    hystrix.run(timeoutCommand, () => 1),
+    hystrix.run(timeoutCommand, () => 1),
+    hystrix.run(timeoutCommand, () => 1)
   ])
   t.is(hystrix.isOpen(), false, 'isOpen should be false if requests are below the volumeThreshold')
-  await hystrix.run(timeoutCommand)
+  await t.throws(hystrix.run(timeoutCommand), 'Timeout')
   t.is(hystrix.isOpen(), true, 'isOpen should be true if requests are above the volumeThreshold')
 
   await t.throws(hystrix.run(timeoutCommand), 'Bad Request!')
@@ -88,12 +88,12 @@ test('With a broken service', async t => {
   t.is(hystrix.isOpen(), false)
   // 产生 OPEN 状态
   await Promise.all([
-    hystrix.run(timeoutCommand),
-    hystrix.run(timeoutCommand),
-    hystrix.run(timeoutCommand),
-    hystrix.run(timeoutCommand),
-    hystrix.run(timeoutCommand),
-    hystrix.run(timeoutCommand)
+    hystrix.run(timeoutCommand, fallback),
+    hystrix.run(timeoutCommand, fallback),
+    hystrix.run(timeoutCommand, fallback),
+    hystrix.run(timeoutCommand, fallback),
+    hystrix.run(timeoutCommand, fallback),
+    hystrix.run(timeoutCommand, fallback)
   ])
   t.is(hystrix.isOpen(), true)
 
@@ -111,13 +111,13 @@ test('With a broken service', async t => {
   }
 })
 
-test('isOpen should be true if errors are below the errorThreshold', async t => {
+test('isOpen should be false if errors are below the errorThreshold', async t => {
   const hystrix = new Hystrix({
     errorThreshold: 75
   })
   await Promise.all([
-    hystrix.run(timeoutCommand),
-    hystrix.run(timeoutCommand),
+    hystrix.run(timeoutCommand, () => 1),
+    hystrix.run(timeoutCommand, () => 1),
     hystrix.run(success),
     hystrix.run(success),
     hystrix.run(success),
@@ -128,19 +128,19 @@ test('isOpen should be true if errors are below the errorThreshold', async t => 
   t.is(hystrix.isOpen(), false)
 })
 
-test('isOpen should be false if errors are above the errorThreshold', async t => {
+test('isOpen should be true if errors are above the errorThreshold', async t => {
   const hystrix = new Hystrix({
     errorThreshold: 75
   })
   await Promise.all([
-    hystrix.run(timeoutCommand),
-    hystrix.run(timeoutCommand),
-    hystrix.run(timeoutCommand),
-    hystrix.run(timeoutCommand),
-    hystrix.run(timeoutCommand),
-    hystrix.run(timeoutCommand),
-    hystrix.run(timeoutCommand),
-    hystrix.run(timeoutCommand),
+    hystrix.run(timeoutCommand, () => 1),
+    hystrix.run(timeoutCommand, () => 1),
+    hystrix.run(timeoutCommand, () => 1),
+    hystrix.run(timeoutCommand, () => 1),
+    hystrix.run(timeoutCommand, () => 1),
+    hystrix.run(timeoutCommand, () => 1),
+    hystrix.run(timeoutCommand, () => 1),
+    hystrix.run(timeoutCommand, () => 1),
     hystrix.run(success),
     hystrix.run(success)
   ])
@@ -155,12 +155,12 @@ test('timeouts metrics === failures metrics', async t => {
     }
   })
   await Promise.all([
-    timeoutHystrix.run(timeoutCommand),
-    timeoutHystrix.run(timeoutCommand),
-    timeoutHystrix.run(timeoutCommand),
-    timeoutHystrix.run(timeoutCommand),
-    timeoutHystrix.run(timeoutCommand),
-    timeoutHystrix.run(timeoutCommand)
+    timeoutHystrix.run(timeoutCommand, () => 1),
+    timeoutHystrix.run(timeoutCommand, () => 1),
+    timeoutHystrix.run(timeoutCommand, () => 1),
+    timeoutHystrix.run(timeoutCommand, () => 1),
+    timeoutHystrix.run(timeoutCommand, () => 1),
+    timeoutHystrix.run(timeoutCommand, () => 1)
   ])
 
   const failuresHystrix = new Hystrix({
@@ -190,9 +190,9 @@ test('should get right stats data', async t => {
     hystrix.run(success),
     hystrix.run(fail).catch(() => 'error'),
     hystrix.run(fail).catch(() => 'error'),
-    hystrix.run(timeoutCommand),
-    hystrix.run(timeoutCommand),
-    hystrix.run(timeoutCommand),
+    hystrix.run(timeoutCommand, () => 1),
+    hystrix.run(timeoutCommand, () => 1),
+    hystrix.run(timeoutCommand, () => 1),
     hystrix.run(success),
     hystrix.run(fail).catch(() => 'error')
   ])
@@ -210,4 +210,23 @@ test('should get right stats data', async t => {
   t.deepEqual(_.pick(stats, ['state', 'totalCount', 'errorCount', 'failures', 'successes', 'timeouts', 'shortCircuits', 'errorPercentage']), should)
   t.true(_.isNumber(stats.latencyMean))
   Object.values(stats.percentiles).forEach(value => t.true(_.isNumber(value)))
+})
+
+test('collectors', async t => {
+  try {
+    /* eslint-disable no-new */
+    new Hystrix({
+      collectors: 'data'
+    })
+  } catch (error) {
+    t.is(error.message, 'collector must be a function')
+  }
+
+  let stats = {}
+  // 支持只传一个函数
+  const hystrix = new Hystrix({
+    collectors: data => (stats = data)
+  })
+  await hystrix.run(success)
+  t.deepEqual(hystrix.getStats(), stats)
 })
