@@ -204,10 +204,11 @@ test('should get right stats data', async t => {
     successes: 3,
     timeouts: 3,
     shortCircuits: 0,
-    errorPercentage: (6 / 9) * 100
+    errorPercentage: (6 / 9) * 100,
+    responseTime: _.last(_.last(hystrix._buckets).runTimes) || 0
   }
   t.deepEqual(hystrix.getStats(), stats)
-  t.deepEqual(_.pick(stats, ['state', 'totalCount', 'errorCount', 'failures', 'successes', 'timeouts', 'shortCircuits', 'errorPercentage']), should)
+  t.deepEqual(_.pick(stats, ['state', 'totalCount', 'errorCount', 'failures', 'successes', 'timeouts', 'shortCircuits', 'errorPercentage', 'responseTime']), should)
   t.true(_.isNumber(stats.latencyMean))
   Object.values(stats.percentiles).forEach(value => t.true(_.isNumber(value)))
 })

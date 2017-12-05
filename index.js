@@ -1,3 +1,5 @@
+const _ = require('lodash')
+
 const OPEN = 0
 const HALF_OPEN = 1
 const CLOSED = 2
@@ -180,10 +182,12 @@ const generateStats = (state, metrics, buckets) => {
       percentiles[key] = latencyLog[index]
     }
   })
+  const responseTime = _.last(_.last(buckets).runTimes) || 0
   return Object.assign({
     state,
     latencyMean: latencyLog.reduce((x, y) => x + y, 0) / (latencyLog.length || 1),
-    percentiles
+    percentiles,
+    responseTime
   }, metrics)
 }
 
