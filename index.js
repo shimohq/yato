@@ -174,7 +174,11 @@ const generateStats = (state, metrics, buckets) => {
   }
   Object.keys(percentiles).forEach(key => {
     const index = Math.floor(latencyLog.length / 100 * (+key)) - 1
-    percentiles[key] = latencyLog[index]
+    if (index < 0) {
+      delete percentiles[key]
+    } else {
+      percentiles[key] = latencyLog[index]
+    }
   })
   return Object.assign({
     state,
