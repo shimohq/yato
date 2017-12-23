@@ -1,6 +1,7 @@
 /// <reference types="node" />
 import {EventEmitter} from 'events'
-import BucketList, {IBucketListOptions} from './BucketList'
+import BucketList, {Bucket, IBucketListOptions} from './BucketList'
+import Metrics from './BucketList/Metrics'
 import StateManager, {IStateManagerOptions, State} from './StateManager'
 import {Command, executeCommand} from './utils'
 
@@ -19,6 +20,13 @@ export interface IYatoOptions extends IBucketListOptions, IStateManagerOptions {
 }
 
 export {State}
+
+export interface IStats extends Metrics {
+  latencyMean: number,
+  percentiles: {[key: string]: number},
+  responseTime: number,
+  state: State
+}
 
 export default class Yato extends EventEmitter {
   private bucketList: BucketList
@@ -46,33 +54,61 @@ export default class Yato extends EventEmitter {
     })
   }
 
-  public run (command: Command, fallback?: FallbackFunction) {
+  /**
+   * Run a command
+   *
+   * @param {Command} command
+   * @param {FallbackFunction} [fallback]
+   * @returns {Promise<any>}
+   * @memberof Yato
+   * @example
+   * const Redis = require('ioredis')
+   * const redis = new Redis()
+   * yato.run(() => redis.get('foo'), () => 'bar')
+   */
+  public run (command: Command, fallback?: FallbackFunction): Promise<any> {
     const fallbackContainer = createFallbackContainer(fallback)
-    if (!this.stateManager.isOpen()) {
+    if (!this.isOpen()) {
       // 非关闭状态，执行请求，并将其执行状况记录到最后一个 bucket 里
       return executeCommand(command, this.bucketList, this.timeoutDuration)
         // 如果超时或者响应失败，执行 fallback
         .catch((error: Error) => fallbackContainer() || Promise.reject(error))
     }
-    this.bucketList.currentBucket.shortCircuits += 1
+    this.currentBucket.shortCircuits += 1
 
     return fallbackContainer() || Promise.reject(new Error('Bad Request!'))
   }
 
+  get currentBucket (): Bucket {
+    return this.bucketList.currentBucket
+  }
+
+  /**
+   * Get the state of the circuit breaker
+   *
+   * @returns {State}
+   * @memberof Yato
+   */
   public getState (): State {
     return this.stateManager.getState()
   }
 
-  public isOpen () {
-    return this.stateManager.isOpen()
+  /**
+   * Whether the circuit breaker is open
+   *
+   * @returns {boolean}
+   * @memberof Yato
+   */
+  public isOpen (): boolean {
+    return this.getState() === State.Open
   }
 
-  public getStats (): object {
+  public getStats (): IStats {
     return generateStats(this.stateManager.getState(), this.bucketList)
   }
 }
 
-function generateStats (state: State, bucketList: BucketList): object {
+function generateStats (state: State, bucketList: BucketList): IStats {
   const latencyLog = bucketList.getSortedRuntimes()
   const metrics = bucketList.getMetrics()
 

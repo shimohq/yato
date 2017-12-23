@@ -20,22 +20,6 @@ export default class StateManager {
     return this.state
   }
 
-  public isOpen (): boolean {
-    return this.state === State.Open
-  }
-
-  public isHalfOpen (): boolean {
-    return this.state === State.HalfOpen
-  }
-
-  public isClosed (): boolean {
-    return this.state === State.Closed
-  }
-
-  public openHalf (): void {
-    this.setState(State.HalfOpen)
-  }
-
   // HALF_OPEN -> OPEN/CLOSED  CLOSED -> OPEN  OPEN -> HALF_OPEN
   public updateState (bucketList: BucketList): void {
     const metrics = bucketList.getMetrics()
@@ -61,7 +45,7 @@ export default class StateManager {
           this.setState(State.Open, metrics)
 
           setTimeout(() => {
-            if (this.isOpen()) {
+            if (this.state === State.Open) {
               this.openHalf()
             }
           }, this.options.windowDuration)
@@ -75,5 +59,9 @@ export default class StateManager {
   private setState (state: State, arg?: any) {
     this.state = state
     this.emitter.emit(state === State.Closed ? 'close' : state as string, arg)
+  }
+
+  private openHalf (): void {
+    this.setState(State.HalfOpen)
   }
 }

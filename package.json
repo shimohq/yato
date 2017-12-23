@@ -2,15 +2,15 @@
   "name": "yato",
   "version": "2.0.0-0",
   "description": "A node module similar to hystrix. Who caused riots - cut it!",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "scripts": {
-    "test": "npm run lint && npm run build && nyc --reporter=html --reporter=text ava",
+    "test": "npm run lint && npm run build && nyc --reporter=html --reporter=text ava -- dist/test/**/*.test.js",
     "build": "tsc",
     "lint": "tslint -c tslint.json 'src/**/*.ts'"
   },
   "files": [
-    "dist"
+    "dist/src"
   ],
   "keywords": [
     "node",
@@ -20,6 +20,8 @@
   "author": "Lever",
   "license": "MIT",
   "devDependencies": {
+    "@types/is-promise": "^2.1.0",
+    "@types/lodash": "^4.14.91",
     "@types/node": "^8.5.2",
     "ava": "^0.24.0",
     "is-promise": "^2.1.0",

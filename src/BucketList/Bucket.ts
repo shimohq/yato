@@ -20,4 +20,21 @@ export default class Bucket {
   get totalCount (): number {
     return this.errorCount + this.successes
   }
+
+  public increaseValue (category: BucketCategory) {
+    switch (category) {
+      case BucketCategory.Failures:
+        this.failures += 1
+        break
+      case BucketCategory.ShortCircuits:
+        this.shortCircuits += 1
+        break
+      case BucketCategory.Successes:
+        this.successes += 1
+        break
+      case BucketCategory.Timeouts:
+        this.timeouts += 1
+        break
+    }
+  }
 }
