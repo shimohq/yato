@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/shimohq/yato.svg?branch=master)](https://travis-ci.org/shimohq/yato)
 
-石墨服务断路器
+A node module similar to hystrix. Who caused riots - cut it!
 
 ## Install
 
