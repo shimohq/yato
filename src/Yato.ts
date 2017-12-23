@@ -95,12 +95,12 @@ function generateStats (state: State, bucketList: BucketList): object {
     }
   })
 
-  return Object.assign({
+  return Object.assign(metrics, {
     latencyMean: latencyLog.reduce((x, y) => x + y, 0) / (latencyLog.length || 1),
     percentiles,
     responseTime: bucketList.latestResponseTime,
     state
-  }, metrics)
+  })
 }
 
 const createFallbackContainer = (fallback?: FallbackFunction) => (): Promise<any> | false => {

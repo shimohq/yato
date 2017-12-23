@@ -1,5 +1,5 @@
 import Bucket, {BucketCategory} from './Bucket'
-import Metrics from './Metrics'
+import Metrics, {calculateMetrics} from './Metrics'
 
 export interface IBucketListOptions {
   windowDuration: number,
@@ -58,7 +58,7 @@ export default class BucketList {
   }
 
   public getMetrics (): Metrics {
-    return this.buckets.reduce((metrics, bucket) => metrics.involve(bucket), new Metrics())
+    return calculateMetrics(this.buckets)
   }
 
   public getSortedRuntimes (): number[] {

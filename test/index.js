@@ -63,11 +63,11 @@ test('With a broken service', async t => {
   const count = await runResult
   t.is(count, 1, 'should run the fallback and return its result if one is provided')
 
-  // 一段时间后切换到 HAL.OPEN
+  // 一段时间后切换到 HALF_OPEN
   t.is(yato.getState(), Yato.State.Open)
   await new Promise(resolve => {
     setTimeout(() => {
-      t.is(yato.getState(), Yato.State.HalfOpen, 'should switch to HAL.OPEN')
+      t.is(yato.stateManager.isHalfOpen(), 'should switch to HALF_OPEN')
       resolve()
     }, 10000)
   })
@@ -75,7 +75,7 @@ test('With a broken service', async t => {
   await yato.run(success)
   const close = await closePromise
   t.true(close)
-  t.is(yato.getState(), Yato.State.Closed, 'should switch to CLOSED')
+  t.true(yato.stateManager.isClosed(), 'should switch to CLOSED')
 
   t.is(yato.isOpen(), false)
   // 产生 OPEN 状态
@@ -91,7 +91,7 @@ test('With a broken service', async t => {
 
   await new Promise(resolve => {
     setTimeout(() => {
-      t.is(yato.getState(), Yato.State.HalfOpen, 'should switch to HAL.OPEN')
+      t.true(yato.stateManager.isHalfOpen(), 'should switch to HALF_OPEN')
       resolve()
     }, 10000)
   })
@@ -206,7 +206,8 @@ test('should get right stats data', async t => {
   }
   const stats = await statsPromise
   t.deepEqual(yato.getStats(), stats)
-  t.deepEqual(_.pick(stats, ['state', 'totalCount', 'errorCount', 'failures', 'successes', 'timeouts', 'shortCircuits', 'errorPercentage', 'responseTime']), should)
+  t.deepEqual(_.pick(stats, ['state', 'totalCount', 'errorCount', 'failures', 'successes', 'timeouts', 'shortCircuits', 'responseTime']), should)
+  t.is((4 / 6) * 100, stats.errorPercentage)
   t.true(typeof stats.latencyMean === 'number')
   Object.values(stats.percentiles).forEach(value => t.true(typeof value === 'number'))
 })
