@@ -81,6 +81,35 @@ shortCircuits -> 跳过请求直接返回失败或者 fallback 次数
 
 errorPercentage -> 请求失败率 = errorCount / totalCount
 
+## Events
+
+Yato 支持订阅一些重要的事件:
+
+ - open - 断路器被打开时触发
+ - close - 断路器被关闭时触发
+ - halfOpen - 断路器切换到半打开状态时触发
+ - collect - 订阅此事件用来收集统计数据
+ 
+ ```JavaScript
+   yato.on('open', metrics => {
+     // metrics: { totalCount, errorCount, failures, successes, timeouts, shortCircuits, errorPercentage }
+     console.log(metrics)
+   })
+   
+   yato.on('close', () => {
+     console.log('close')
+   })
+   
+   yato.on('halfOpen', () => {
+     console.log('halfOpen')
+   })
+   
+   yato.on('collect', stats => {
+     // same as getStats API's return.
+     console.log(stats)
+   })
+ ```
+
 ## Config
 
 #### windowDuration
@@ -111,7 +140,7 @@ errorPercentage -> 请求失败率 = errorCount / totalCount
 
 错误率 = (出错次数 / 请求总次数) * 100
 
-yato 会在每个请求结束或者超时后，更新断路器的状态，指标之一就是错误率，一旦错误率高于指定的阈值，断路器就会被打开。
+Yato 会在每个请求结束或者超时后，更新断路器的状态，指标之一就是错误率，一旦错误率高于指定的阈值，断路器就会被打开。
 
 默认值为 50
 
@@ -122,12 +151,6 @@ yato 会在每个请求结束或者超时后，更新断路器的状态，指标
 比如某段时间内，只有一个请求，且这个请求失败或者超时了，我们不希望这个时候就判定该服务 100% 不健康，因此设定了这个选项，只有总请求次数超过了这个值，我们统计的错误率才有意义。
 
 默认值为 5
-
-#### collectors
-
-数据收集器，由使用者指定收集数据的程序。它是一个数组，这个数组是一个收集器队列，每次请求进来会触发收集器队列挨个收集请求产生的统计数据。
-
-对单个的收集器 (collector) 来说，是一个接受统计数据的函数，通过收集器我们可以获得该请求结束后最新的统计数据。至于统计数据的结构与 [getStats()](#getstats) API 返回的数据结构一致。
 
 ## 关于断路器
 
@@ -142,7 +165,6 @@ state => OPEN / HALF_OPEN / CLOSED
 每产生一个请求，将请求的情况记录到当前时间所处的 bucket 中，并根据所有的 bucket 的记录计算出服务当前的健康状况，健康状况可以根据不同服务进行配置，默认失败超过请求总量的 50%，会触发断路器打开 —— OPEN，之后的请求看到断路器处于 OPEN 状态，直接返回失败，不再向不健康的服务发送请求，以免其更加不健康。
 
 在断路器开启 OPEN 状态时，启动计时器，根据配置，等待一段时间后，将状态变更为 HALF_OPEN，并允许请求通过，请求结束后根据请求情况更新断路器状态 —— 如果请求失败，则继续 OPEN，再次出发计时器；如果请求成功，变更状态为 CLOSED
-
 
 ## Thanks For
 
