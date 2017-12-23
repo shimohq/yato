@@ -6,7 +6,7 @@ export interface IBucketListOptions {
   numBuckets: number
 }
 
-export {BucketCategory}
+export {BucketCategory, Bucket}
 
 export default class BucketList {
   private buckets: Bucket[] = [new Bucket()]
@@ -35,21 +35,7 @@ export default class BucketList {
   }
 
   public increaseBucketValue (category: BucketCategory) {
-    const bucket = this.currentBucket
-    switch (category) {
-      case BucketCategory.Failures:
-        bucket.failures += 1
-        break
-      case BucketCategory.ShortCircuits:
-        bucket.shortCircuits += 1
-        break
-      case BucketCategory.Successes:
-        bucket.successes += 1
-        break
-      case BucketCategory.Timeouts:
-        bucket.timeouts += 1
-        break
-    }
+    this.currentBucket.increaseValue(category)
   }
 
   public collectRuntime (runtime: number) {
