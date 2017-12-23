@@ -16,13 +16,13 @@ test('With a working service', async t => {
   const result = await yato.run(success)
   t.is(result, true, 'should run the command')
 
-  t.is(yato._buckets.currentBucket.successes, 1, 'should notify the yato if the command was successful')
+  t.is(yato.bucketList.currentBucket.successes, 1, 'should notify the yato if the command was successful')
 
   try {
     await yato.run(fail)
   } catch (err) {
     t.is(err.message, 'error', 'the error can be catched')
-    t.is(yato._buckets.currentBucket.failures, 1, 'should notify the yato if the command was fail')
+    t.is(yato.bucketList.currentBucket.failures, 1, 'should notify the yato if the command was fail')
   }
 })
 
@@ -30,7 +30,7 @@ test('With timeout command', async t => {
   const yato = new Yato()
   const result = await yato.run(timeoutCommand, () => 1)
   t.is(result, 1, 'should get fallback result when command is timeout')
-  const metrics = yato._buckets.getMetrics()
+  const metrics = yato.bucketList.getMetrics()
   t.is(metrics.timeouts, 1, 'should record a timeout if not a success or failure')
   t.is(metrics.successes, 0, 'should not record a success when there is a timeout')
 })
@@ -55,7 +55,7 @@ test('With a broken service', async t => {
   t.is(yato.isOpen(), true, 'isOpen should be true if requests are above the volumeThreshold')
 
   await t.throws(yato.run(timeoutCommand), 'Bad Request!')
-  t.is(yato._buckets.currentBucket.shortCircuits, 1, 'should record a short circuit')
+  t.is(yato.bucketList.currentBucket.shortCircuits, 1, 'should record a short circuit')
 
   const fallback = () => 1
   const runResult = yato.run(timeoutCommand, fallback)
@@ -63,11 +63,11 @@ test('With a broken service', async t => {
   const count = await runResult
   t.is(count, 1, 'should run the fallback and return its result if one is provided')
 
-  // 一段时间后切换到 HALF_OPEN
+  // 一段时间后切换到 HAL.OPEN
   t.is(yato.getState(), Yato.State.Open)
   await new Promise(resolve => {
     setTimeout(() => {
-      t.is(yato.getState(), Yato.State.HalfOpen, 'should switch to HALF_OPEN')
+      t.is(yato.getState(), Yato.State.HalfOpen, 'should switch to HAL.OPEN')
       resolve()
     }, 10000)
   })
@@ -91,7 +91,7 @@ test('With a broken service', async t => {
 
   await new Promise(resolve => {
     setTimeout(() => {
-      t.is(yato.getState(), Yato.State.HalfOpen, 'should switch to HALF_OPEN')
+      t.is(yato.getState(), Yato.State.HalfOpen, 'should switch to HAL.OPEN')
       resolve()
     }, 10000)
   })
@@ -202,11 +202,11 @@ test('should get right stats data', async t => {
     successes: 2,
     timeouts: 2,
     shortCircuits: 0,
-    responseTime: _.last(yato._buckets.currentBucket.runTimes) || 0
+    responseTime: _.last(yato.bucketList.currentBucket.runTimes) || 0
   }
   const stats = await statsPromise
   t.deepEqual(yato.getStats(), stats)
   t.deepEqual(_.pick(stats, ['state', 'totalCount', 'errorCount', 'failures', 'successes', 'timeouts', 'shortCircuits', 'errorPercentage', 'responseTime']), should)
-  t.true(_.isNumber(stats.latencyMean))
-  Object.values(stats.percentiles).forEach(value => t.true(_.isNumber(value)))
+  t.true(typeof stats.latencyMean === 'number')
+  Object.values(stats.percentiles).forEach(value => t.true(typeof value === 'number'))
 })
