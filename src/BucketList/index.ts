@@ -9,24 +9,24 @@ export interface IBucketListOptions {
 export {BucketCategory}
 
 export default class BucketList {
-  private _buckets: Bucket[] = [new Bucket()]
-  constructor (options: IBucketListOptions, private _onNewRuntimeCollected: () => void) {
+  private buckets: Bucket[] = [new Bucket()]
+  constructor (options: IBucketListOptions, private onNewRuntimeCollected: () => void) {
     if (options.numBuckets <= 0) {
       throw new Error(`Expect "numBuckets" to be positive, got ${options.numBuckets}`)
     }
 
     const bucketDuration = options.windowDuration / options.numBuckets
     setInterval(() => {
-      this._buckets.push(new Bucket())
+      this.buckets.push(new Bucket())
 
-      if (this._buckets.length > options.numBuckets) {
-        this._buckets.shift()
+      if (this.buckets.length > options.numBuckets) {
+        this.buckets.shift()
       }
     }, bucketDuration)
   }
 
   get currentBucket (): Bucket {
-    return this._buckets[this._buckets.length - 1]
+    return this.buckets[this.buckets.length - 1]
   }
 
   get latestResponseTime (): number {
@@ -54,15 +54,15 @@ export default class BucketList {
 
   public collectRuntime (runtime: number) {
     this.currentBucket.runTimes.push(runtime)
-    this._onNewRuntimeCollected()
+    this.onNewRuntimeCollected()
   }
 
   public getMetrics (): Metrics {
-    return this._buckets.reduce((metrics, bucket) => metrics.involve(bucket), new Metrics())
+    return this.buckets.reduce((metrics, bucket) => metrics.involve(bucket), new Metrics())
   }
 
   public getSortedRuntimes (): number[] {
-    return this._buckets
+    return this.buckets
       .reduce((logs: number[], bucket) => logs.concat(bucket.runTimes), [])
       .sort((x, y) => x - y)
   }

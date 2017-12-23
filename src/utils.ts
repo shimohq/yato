@@ -3,10 +3,10 @@ import BucketList, {BucketCategory} from './BucketList'
 const TIMEOUT_INDICATOR = 'request timeout'
 
 export type Command = (...args: any[]) => Promise<any>
-export function executeCommand (command: Command, buckets: BucketList, timeoutDuration: number): any {
+export function executeCommand (command: Command, bucketList: BucketList, timeoutDuration: number): any {
   const increment = (category: BucketCategory, runTime: number) => {
-    buckets.increaseBucketValue(category)
-    buckets.collectRuntime(runTime)
+    bucketList.increaseBucketValue(category)
+    bucketList.collectRuntime(runTime)
   }
 
   const startTime = Date.now()

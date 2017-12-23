@@ -21,25 +21,25 @@ export interface IYatoOptions extends IBucketListOptions, IStateManagerOptions {
 export {State}
 
 export default class Yato extends EventEmitter {
-  private _buckets: BucketList
-  private _stateManager: StateManager
-  private _timeoutDuration: number
+  private bucketList: BucketList
+  private stateManager: StateManager
+  private timeoutDuration: number
 
   constructor (options = {}) {
     super()
 
     const yatoOptions: IYatoOptions = Object.assign({}, DEFAULT_OPTIONS, options)
 
-    this._stateManager = new StateManager(this, {
+    this.stateManager = new StateManager(this, {
       errorThreshold: yatoOptions.errorThreshold,
       volumeThreshold: yatoOptions.volumeThreshold,
       windowDuration: yatoOptions.windowDuration
     })
-    this._buckets = new BucketList({
+    this.bucketList = new BucketList({
       numBuckets: yatoOptions.numBuckets,
       windowDuration: yatoOptions.windowDuration
     }, () => {
-      this._stateManager.updateState(this._buckets)
+      this.stateManager.updateState(this.bucketList)
       if (this.listenerCount('collect') > 0) {
         this.emit('collect', this.getStats())
       }
@@ -48,33 +48,33 @@ export default class Yato extends EventEmitter {
 
   public run (command: Command, fallback?: FallbackFunction) {
     const fallbackContainer = createFallbackContainer(fallback)
-    if (!this._stateManager.isOpen()) {
+    if (!this.stateManager.isOpen()) {
       // 非关闭状态，执行请求，并将其执行状况记录到最后一个 bucket 里
-      return executeCommand(command, this._buckets, this._timeoutDuration)
+      return executeCommand(command, this.bucketList, this.timeoutDuration)
         // 如果超时或者响应失败，执行 fallback
         .catch((error: Error) => fallbackContainer() || Promise.reject(error))
     }
-    this._buckets.currentBucket.shortCircuits += 1
+    this.bucketList.currentBucket.shortCircuits += 1
 
     return fallbackContainer() || Promise.reject(new Error('Bad Request!'))
   }
 
   public getState (): State {
-    return this._stateManager.getState()
+    return this.stateManager.getState()
   }
 
   public isOpen () {
-    return this._stateManager.isOpen()
+    return this.stateManager.isOpen()
   }
 
   public getStats (): object {
-    return generateStats(this._stateManager.getState(), this._buckets)
+    return generateStats(this.stateManager.getState(), this.bucketList)
   }
 }
 
-function generateStats (state: string, buckets: BucketList): object {
-  const latencyLog = buckets.getSortedRuntimes()
-  const metrics = buckets.getMetrics()
+function generateStats (state: string, bucketList: BucketList): object {
+  const latencyLog = bucketList.getSortedRuntimes()
+  const metrics = bucketList.getMetrics()
 
   const percentiles: {[key: string]: number} = {
     25: 0,
@@ -98,7 +98,7 @@ function generateStats (state: string, buckets: BucketList): object {
   return Object.assign({
     latencyMean: latencyLog.reduce((x, y) => x + y, 0) / (latencyLog.length || 1),
     percentiles,
-    responseTime: buckets.latestResponseTime,
+    responseTime: bucketList.latestResponseTime,
     state
   }, metrics)
 }
