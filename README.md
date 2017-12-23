@@ -1,6 +1,6 @@
 # yato.js
 
-[![Build Status](https://travis-ci.org/shimohq/yato.svg?branch=master)](https://travis-ci.org/shimohq/yato)
+[![Build Status](https://travis-ci.org/shimohq/shimo-hystrix.svg?branch=master)](https://travis-ci.org/shimohq/shimo-hystrix)
 
 A node module similar to hystrix. Who caused riots - cut it!
 
