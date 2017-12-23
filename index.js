@@ -1,4 +1,5 @@
 const _ = require('lodash')
+const EventEmitter = require('events')
 
 const OPEN = 0
 const HALF_OPEN = 1
@@ -17,10 +18,10 @@ const createBucket = () => ({
   runTimes: []
 })
 
-const createState = (opts = {}) => {
+const createState = event => {
   let s = CLOSED
   // open 的标准
-  const { errorThreshold, volumeThreshold, onClosed, onOpen, collectors } = opts
+  const { errorThreshold, volumeThreshold, windowDuration } = event.opts || {}
 
   return {
     isOpen () {
@@ -28,18 +29,14 @@ const createState = (opts = {}) => {
     },
     // OPEN -> HALF_OPEN
     openHalf () {
-      this.updateState(HALF_OPEN)
+      s = HALF_OPEN
+      event.emit('halfOpen')
     },
     getState () {
       return s
     },
     // HALF_OPEN -> OPEN/CLOSED  CLOSED -> OPEN  OPEN -> HALF_OPEN
     updateState (buckets) {
-      // OPEN -> HALF_OPEN
-      if (s === OPEN && buckets === HALF_OPEN) {
-        s = HALF_OPEN
-        return
-      }
       const metrics = calculateMetrics(buckets)
 
       // HALF_OPEN -> OPEN/CLOSED
@@ -49,10 +46,11 @@ const createState = (opts = {}) => {
 
         if (lastCommandFailed) {
           s = OPEN
+          event.emit('open', metrics)
         } else {
           s = CLOSED
-          // 触发关闭回调
-          onClosed && onClosed(metrics)
+          // 触发关闭事件
+          event.emit('close')
         }
       } else if (s === CLOSED) {
         // CLOSED -> OPEN
@@ -65,15 +63,13 @@ const createState = (opts = {}) => {
 
         if (overThreshold) {
           s = OPEN
+          event.emit('open', metrics)
           setTimeout(() => {
             this.isOpen() && this.openHalf()
-          }, opts.windowDuration)
-          // 触发开启回调
-          onOpen && onOpen(metrics)
+          }, windowDuration)
         }
       }
-      // 惰性收集请求状态数据
-      collectors(() => generateStats(stateMap.get(s), metrics, buckets))
+      event.emit('collect', generateStats(stateMap.get(s), metrics, buckets))
     }
   }
 }
@@ -145,21 +141,6 @@ const stateExecuteCommand = (s, timeoutDuration) => (command, buckets) => {
   })
 }
 
-const collectData = (collectors = []) => {
-  if (!Array.isArray(collectors)) {
-    collectors = [collectors]
-  }
-  return getData => {
-    const data = collectors.length > 0 && getData()
-    return collectors.forEach(collector => {
-      if (typeof collector !== 'function') {
-        throw new Error('collector must be a function')
-      }
-      collector(data)
-    })
-  }
-}
-
 const generateStats = (state, metrics, buckets) => {
   const latencyLog = buckets
     .reduce((logs, bucket) => logs.concat(bucket.runTimes), [])
@@ -191,8 +172,16 @@ const generateStats = (state, metrics, buckets) => {
   }, metrics)
 }
 
-class Hystrix {
+const fallbackContainer = fallback => () => {
+  if (fallback) {
+    return Promise.resolve(fallback())
+  }
+  return false
+}
+
+class Yato extends EventEmitter {
   constructor (opts = {}) {
+    super()
     this.opts = opts
     // 初始化
     this.opts.windowDuration = opts.windowDuration || 10000 // ms
@@ -200,29 +189,26 @@ class Hystrix {
     this.opts.timeoutDuration = opts.timeoutDuration || 3000 // ms
     this.opts.errorThreshold = opts.errorThreshold || 50 // percentage
     this.opts.volumeThreshold = opts.volumeThreshold || 5 // 超过这个量的请求数量，bucket 数据才有意义
-    this.opts.collectors = collectData(opts.collectors || [])
 
     this._buckets = [createBucket()]
 
     // 启动轮询
-    this._state = createState(this.opts)
+    this._state = createState(this)
     this._ticker = startTicker(this._buckets, this.opts, this._state)
     this._executeCommand = stateExecuteCommand(this._state, this.opts.timeoutDuration)
   }
   run (command, fallback) {
+    fallback = fallbackContainer(fallback)
     const curBucket = this._buckets[this._buckets.length - 1]
     if (!this._state.isOpen()) {
       // 非关闭状态，执行请求，并将其执行状况记录到最后一个 bucket 里
       return this._executeCommand(command, this._buckets)
         // 如果超时或者响应失败，执行 fallback
-        .catch(error => fallback ? fallback() : Promise.reject(error))
+        .catch(error => fallback() || Promise.reject(error))
     }
     curBucket.shortCircuits++
-    if (fallback) {
-      return Promise.resolve(fallback())
-    }
 
-    return Promise.reject(new Error('Bad Request!'))
+    return fallback() || Promise.reject(new Error('Bad Request!'))
   }
   isOpen () {
     return this._state.isOpen()
@@ -232,4 +218,4 @@ class Hystrix {
   }
 }
 
-module.exports = Hystrix
+module.exports = Yato

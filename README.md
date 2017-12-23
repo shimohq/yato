@@ -1,24 +1,24 @@
-# shimo-hystrix
+# yato.js
 
-[![Build Status](https://travis-ci.org/shimohq/shimo-hystrix.svg?branch=master)](https://travis-ci.org/shimohq/shimo-hystrix)
+[![Build Status](https://travis-ci.org/shimohq/yato.svg?branch=master)](https://travis-ci.org/shimohq/yato)
 
 石墨服务断路器
 
 ## Install
 
 ```JavaScript
-npm install shimo-hystrix
+npm install yato
 ```
 
 ## Usage
 
 ```JavaScript
-const Hystrix = require('shimo-hystrix')
-const hystrix = new Hystrix({
+const Yato = require('yato')
+const yato = new Yato({
  // config...
 })
 
-hystrix
+yato
   .run(() => Promise.reslove(1))
   .then(data => data === 1) // true
 ```
@@ -111,7 +111,7 @@ errorPercentage -> 请求失败率 = errorCount / totalCount
 
 错误率 = (出错次数 / 请求总次数) * 100
 
-shimo-hystrix 会在每个请求结束或者超时后，更新断路器的状态，指标之一就是错误率，一旦错误率高于指定的阈值，断路器就会被打开。
+yato 会在每个请求结束或者超时后，更新断路器的状态，指标之一就是错误率，一旦错误率高于指定的阈值，断路器就会被打开。
 
 默认值为 50
 
