@@ -1,11 +1,7 @@
 const test = require('ava')
-const Yato = require('../')
+const Yato = require('../dist/index')
 const _ = require('lodash')
 const isPromise = require('is-promise')
-
-const OPEN = 0
-const HALF_OPEN = 1
-const CLOSED = 2
 
 const timeoutCommand = () => new Promise(resolve => {
   // 先发请求再发超时，因此要验证这一项要比超时时间更长才行
@@ -20,25 +16,23 @@ test('With a working service', async t => {
   const result = await yato.run(success)
   t.is(result, true, 'should run the command')
 
-  const bucket = yato._buckets[yato._buckets.length - 1]
-  t.is(bucket.successes, 1, 'should notify the yato if the command was successful')
+  t.is(yato.bucketList.currentBucket.successes, 1, 'should notify the yato if the command was successful')
 
   try {
     await yato.run(fail)
   } catch (err) {
     t.is(err.message, 'error', 'the error can be catched')
-    const curBucket = yato._buckets[yato._buckets.length - 1]
-    t.is(curBucket.failures, 1, 'should notify the yato if the command was fail')
+    t.is(yato.bucketList.currentBucket.failures, 1, 'should notify the yato if the command was fail')
   }
 })
 
 test('With timeout command', async t => {
   const yato = new Yato()
   const result = await yato.run(timeoutCommand, () => 1)
-  const buckets = yato._buckets
   t.is(result, 1, 'should get fallback result when command is timeout')
-  t.is(buckets.reduce((result, bucket) => result + bucket.timeouts, 0), 1, 'should record a timeout if not a success or failure')
-  t.is(yato._buckets.reduce((result, item) => result + item.successes, 0), 0, 'should not record a success when there is a timeout')
+  const metrics = yato.bucketList.getMetrics()
+  t.is(metrics.timeouts, 1, 'should record a timeout if not a success or failure')
+  t.is(metrics.successes, 0, 'should not record a success when there is a timeout')
 })
 
 test('With a broken service', async t => {
@@ -61,7 +55,7 @@ test('With a broken service', async t => {
   t.is(yato.isOpen(), true, 'isOpen should be true if requests are above the volumeThreshold')
 
   await t.throws(yato.run(timeoutCommand), 'Bad Request!')
-  t.is(yato._buckets[yato._buckets.length - 1].shortCircuits, 1, 'should record a short circuit')
+  t.is(yato.bucketList.currentBucket.shortCircuits, 1, 'should record a short circuit')
 
   const fallback = () => 1
   const runResult = yato.run(timeoutCommand, fallback)
@@ -69,11 +63,11 @@ test('With a broken service', async t => {
   const count = await runResult
   t.is(count, 1, 'should run the fallback and return its result if one is provided')
 
-  // 一段时间后切换到 HALF_OPEN
-  t.is(yato._state.getState(), OPEN)
+  // 一段时间后切换到 HAL.OPEN
+  t.is(yato.getState(), Yato.State.Open)
   await new Promise(resolve => {
     setTimeout(() => {
-      t.is(yato._state.getState(), HALF_OPEN, 'should switch to HALF_OPEN')
+      t.is(yato.getState(), Yato.State.HalfOpen, 'should switch to HAL.OPEN')
       resolve()
     }, 10000)
   })
@@ -81,7 +75,7 @@ test('With a broken service', async t => {
   await yato.run(success)
   const close = await closePromise
   t.true(close)
-  t.is(yato._state.getState(), CLOSED, 'should switch to CLOSED')
+  t.is(yato.getState(), Yato.State.Closed, 'should switch to CLOSED')
 
   t.is(yato.isOpen(), false)
   // 产生 OPEN 状态
@@ -97,7 +91,7 @@ test('With a broken service', async t => {
 
   await new Promise(resolve => {
     setTimeout(() => {
-      t.is(yato._state.getState(), HALF_OPEN, 'should switch to HALF_OPEN')
+      t.is(yato.getState(), Yato.State.HalfOpen, 'should switch to HAL.OPEN')
       resolve()
     }, 10000)
   })
@@ -105,7 +99,7 @@ test('With a broken service', async t => {
   try {
     await yato.run(fail)
   } catch (error) {
-    t.is(yato._state.getState(), OPEN, 'should switch to OPEN')
+    t.is(yato.getState(), Yato.State.Open, 'should switch to OPEN')
   }
 })
 
@@ -201,19 +195,18 @@ test('should get right stats data', async t => {
   })
   await yato.run(timeoutCommand, () => 1)
   const should = {
-    state: 'OPEN',
+    state: 'open',
     totalCount: 6,
     errorCount: 4,
     failures: 2,
     successes: 2,
     timeouts: 2,
     shortCircuits: 0,
-    errorPercentage: (4 / 6) * 100,
-    responseTime: _.last(_.last(yato._buckets).runTimes) || 0
+    responseTime: _.last(yato.bucketList.currentBucket.runTimes) || 0
   }
   const stats = await statsPromise
   t.deepEqual(yato.getStats(), stats)
   t.deepEqual(_.pick(stats, ['state', 'totalCount', 'errorCount', 'failures', 'successes', 'timeouts', 'shortCircuits', 'errorPercentage', 'responseTime']), should)
-  t.true(_.isNumber(stats.latencyMean))
-  Object.values(stats.percentiles).forEach(value => t.true(_.isNumber(value)))
+  t.true(typeof stats.latencyMean === 'number')
+  Object.values(stats.percentiles).forEach(value => t.true(typeof value === 'number'))
 })
