@@ -74,6 +74,6 @@ export default class StateManager {
 
   private setState (state: State, arg?: any) {
     this.state = state
-    this.emitter.emit(state === State.Closed ? 'close' : state, arg)
+    this.emitter.emit(state === State.Closed ? 'close' : state as string, arg)
   }
 }

@@ -72,7 +72,7 @@ export default class Yato extends EventEmitter {
   }
 }
 
-function generateStats (state: string, bucketList: BucketList): object {
+function generateStats (state: State, bucketList: BucketList): object {
   const latencyLog = bucketList.getSortedRuntimes()
   const metrics = bucketList.getMetrics()
 
