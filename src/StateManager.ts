@@ -4,7 +4,7 @@ import BucketList from './BucketList'
 
 export enum State {Open = 'open', HalfOpen = 'halfOpen', Closed = 'closed'}
 
-export interface StateManagerOptions {
+export interface IStateManagerOptions {
   volumeThreshold: number,
   errorThreshold: number,
   windowDuration: number
@@ -13,36 +13,31 @@ export interface StateManagerOptions {
 export default class StateManager {
   private _state: State = State.Closed
 
-  constructor(private emitter: EventEmitter, private _options: StateManagerOptions) {
+  constructor (private emitter: EventEmitter, private _options: IStateManagerOptions) {
   }
 
-  getState(): State {
+  public getState (): State {
     return this._state
   }
 
-  isOpen(): boolean {
+  public isOpen (): boolean {
     return this._state === State.Open
   }
 
-  isHalfOpen(): boolean {
+  public isHalfOpen (): boolean {
     return this._state === State.HalfOpen
   }
 
-  isClosed(): boolean {
+  public isClosed (): boolean {
     return this._state === State.Closed
   }
 
-  openHalf (): void {
+  public openHalf (): void {
     this._setState(State.HalfOpen)
   }
 
-  private _setState (state: State, arg?: any) {
-    this._state = state
-    this.emitter.emit(state === State.Closed ? 'close' : state, arg)
-  }
-
   // HALF_OPEN -> OPEN/CLOSED  CLOSED -> OPEN  OPEN -> HALF_OPEN
-  updateState (buckets: BucketList): void {
+  public updateState (buckets: BucketList): void {
     const metrics = buckets.getMetrics()
 
     // HALF_OPEN -> OPEN/CLOSED
@@ -75,5 +70,10 @@ export default class StateManager {
         break
       }
     }
+  }
+
+  private _setState (state: State, arg?: any) {
+    this._state = state
+    this.emitter.emit(state === State.Closed ? 'close' : state, arg)
   }
 }

@@ -6,18 +6,18 @@ export enum BucketCategory {
 }
 
 export default class Bucket {
-  failures: number = 0
-  successes: number = 0
-  timeouts: number = 0
-  shortCircuits: number = 0
+  public failures: number = 0
+  public successes: number = 0
+  public timeouts: number = 0
+  public shortCircuits: number = 0
 
-  runTimes: Array<number> = []
+  public runTimes: number[] = []
 
-  get errorCount(): number {
+  get errorCount (): number {
     return this.failures + this.timeouts
   }
 
-  get totalCount(): number {
+  get totalCount (): number {
     return this.errorCount + this.successes
   }
 }

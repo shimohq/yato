@@ -8,7 +8,7 @@ export default class Metrics {
   private timeouts: number = 0
   private shortCircuits: number = 0
 
-  involve({errorCount, totalCount, failures, timeouts, successes, shortCircuits}: Bucket): Metrics {
+  public involve ({errorCount, totalCount, failures, timeouts, successes, shortCircuits}: Bucket): Metrics {
     this.errorCount += errorCount
     this.totalCount += totalCount
     this.failures += failures
@@ -19,11 +19,11 @@ export default class Metrics {
     return this
   }
 
-  hasError(): boolean {
+  public hasError (): boolean {
     return this.errorCount > 0
   }
 
-  overThreshold(errorThreshold: number, volumeThreshold: number): boolean {
+  public overThreshold (errorThreshold: number, volumeThreshold: number): boolean {
     // 超过指定请求数
     if (this.totalCount <= volumeThreshold) {
       return false
@@ -32,11 +32,11 @@ export default class Metrics {
     return this.errorPercentage > errorThreshold
   }
 
-  get errorPercentage(): number {
+  get errorPercentage (): number {
     return this.totalCount === 0 ? 0 : this.errorCount / this.totalCount * 100
   }
 }
 
-export function calculateMetrics (buckets: Array<Bucket>): Metrics {
+export function calculateMetrics (buckets: Bucket[]): Metrics {
   return buckets.reduce((metrics, bucket) => metrics.involve(bucket), new Metrics())
 }

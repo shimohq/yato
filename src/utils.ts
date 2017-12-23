@@ -13,12 +13,12 @@ export function executeCommand (command: Command, buckets: BucketList, timeoutDu
   const getRunTime = () => Date.now() - startTime
 
   const commandPromise = command()
-  const timeoutPromise = new Promise(resolve => {
+  const timeoutPromise = new Promise((resolve) => {
     setTimeout(resolve, timeoutDuration, TIMEOUT_INDICATOR)
   })
 
   // command 和 timeout 竞争
-  return Promise.race([commandPromise, timeoutPromise]).then(data => {
+  return Promise.race([commandPromise, timeoutPromise]).then((data) => {
     if (data === TIMEOUT_INDICATOR) {
       // 记录超时情况，成功或者失败的情况在超时时间之内返回，则不记录超时
       increment(BucketCategory.Timeouts, getRunTime())
@@ -27,7 +27,7 @@ export function executeCommand (command: Command, buckets: BucketList, timeoutDu
     // 记录成功
     increment(BucketCategory.Successes, getRunTime())
     return data
-  }, error => {
+  }, (error) => {
     // 记录失败
     increment(BucketCategory.Failures, getRunTime())
     throw error
