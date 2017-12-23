@@ -1,4 +1,4 @@
-# yato.js
+# yato
 
 [![Build Status](https://travis-ci.org/shimohq/shimo-hystrix.svg?branch=master)](https://travis-ci.org/shimohq/shimo-hystrix)
 
