@@ -4,7 +4,7 @@ import {timeout} from './command'
 
 const timeoutDuration = 1
 
-test('rejects when timed out', async t => {
+test('rejects when timed out', async (t) => {
   const yato = new Yato({timeoutDuration})
 
   await t.throws(yato.run(timeout), 'Timeout')
@@ -14,7 +14,7 @@ test('rejects when timed out', async t => {
   t.is(yato.currentBucket.successes, 0)
 })
 
-test('uses fallback to resolve', async t => {
+test('uses fallback to resolve', async (t) => {
   const ret = Symbol('fallback result')
   const fallback = () => ret
 

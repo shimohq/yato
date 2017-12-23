@@ -1,8 +1,8 @@
 import test from 'ava'
-import Yato, {State} from '../../src/Yato'
-import {noop, pick, last} from 'lodash'
-import {success, fail, timeout} from './command'
 import isPromise = require('is-promise')
+import {last, noop, pick} from 'lodash'
+import Yato, {State} from '../../src/Yato'
+import {fail, success, timeout} from './command'
 
 async function createdOpenYato (options: object = {}): Promise<Yato> {
   const yato = new Yato(Object.assign(options, {volumeThreshold: 0}))
@@ -13,14 +13,14 @@ async function createdOpenYato (options: object = {}): Promise<Yato> {
   return yato
 }
 
-test('rejects with bad request', async t => {
+test('rejects with bad request', async (t) => {
   const yato = await createdOpenYato()
 
   await t.throws(yato.run(fail), 'Bad Request!')
   t.is(yato.currentBucket.shortCircuits, 1)
 })
 
-test('resolves with fallback when breaker is open', async t => {
+test('resolves with fallback when breaker is open', async (t) => {
   const yato = await createdOpenYato()
 
   const ret = Symbol('fallback')
@@ -30,14 +30,14 @@ test('resolves with fallback when breaker is open', async t => {
   t.is(yato.currentBucket.shortCircuits, 1)
 })
 
-test('switches to halfOpen after windowDuration', async t => {
+test('switches to halfOpen after windowDuration', async (t) => {
   const yato = await createdOpenYato({windowDuration: 1})
   await new Promise((resolve) => yato.once('halfOpen', resolve))
 
   t.is(yato.getState(), State.HalfOpen)
 })
 
-test('halfOpen -> open when fails', async t => {
+test('halfOpen -> open when fails', async (t) => {
   const yato = await createdOpenYato({windowDuration: 1})
   await new Promise((resolve) => yato.once('halfOpen', resolve))
 
@@ -46,7 +46,7 @@ test('halfOpen -> open when fails', async t => {
   t.true(yato.isOpen())
 })
 
-test('halfOpen -> close when successes', async t => {
+test('halfOpen -> close when successes', async (t) => {
   const yato = await createdOpenYato({windowDuration: 1})
   await new Promise((resolve) => yato.once('halfOpen', resolve))
 

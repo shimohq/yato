@@ -4,7 +4,7 @@ import Yato from '../../src/Yato'
 const error = new Error('a failed command')
 const command = () => Promise.reject(error)
 
-test('rejects when command failed', async t => {
+test('rejects when command failed', async (t) => {
   const yato = new Yato()
   await t.throws(yato.run(command))
 
@@ -13,7 +13,7 @@ test('rejects when command failed', async t => {
   t.is(yato.currentBucket.shortCircuits, 0)
 })
 
-test('uses fallback to resolve', async t => {
+test('uses fallback to resolve', async (t) => {
   const ret = Symbol('fallback result')
   const fallback = () => ret
 

@@ -34,13 +34,18 @@ export default class BucketList {
     return runTimes.length === 0 ? 0 : runTimes[runTimes.length - 1]
   }
 
-  public increaseBucketValue (category: BucketCategory) {
-    this.currentBucket.increaseValue(category)
-  }
-
-  public collectRuntime (runtime: number) {
-    this.currentBucket.runTimes.push(runtime)
-    this.onNewRuntimeCollected()
+  /**
+   * Record the result of a request
+   * 
+   * @param {BucketCategory} category the category of the result
+   * @param {number} runtime the runtime of the result
+   * @memberof BucketList
+   */
+  public record (category: BucketCategory, runtime: number): void {
+    const {currentBucket, onNewRuntimeCollected} = this
+    currentBucket.increaseValue(category)
+    currentBucket.runTimes.push(runtime)
+    onNewRuntimeCollected()
   }
 
   public getMetrics (): Metrics {
