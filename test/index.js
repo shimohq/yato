@@ -67,7 +67,7 @@ test('With a broken service', async t => {
   t.is(yato.getState(), Yato.State.Open)
   await new Promise(resolve => {
     setTimeout(() => {
-      t.is(yato.stateManager.isHalfOpen(), 'should switch to HALF_OPEN')
+      t.true(yato.stateManager.isHalfOpen(), 'should switch to HALF_OPEN')
       resolve()
     }, 10000)
   })
