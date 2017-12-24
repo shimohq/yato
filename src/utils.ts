@@ -16,15 +16,15 @@ export function executeCommand (command: Command, bucketList: BucketList, timeou
   return Promise.race([commandPromise, timeoutPromise]).then((data) => {
     if (data === TIMEOUT_INDICATOR) {
       // 记录超时情况，成功或者失败的情况在超时时间之内返回，则不记录超时
-      bucketList.record(BucketCategory.Timeouts, getRunTime())
+      bucketList.collect(BucketCategory.Timeouts, getRunTime())
       throw new Error('Timeout')
     }
     // 记录成功
-    bucketList.record(BucketCategory.Successes, getRunTime())
+    bucketList.collect(BucketCategory.Successes, getRunTime())
     return data
   }, (error) => {
     // 记录失败
-    bucketList.record(BucketCategory.Failures, getRunTime())
+    bucketList.collect(BucketCategory.Failures, getRunTime())
     throw error
   })
 }
