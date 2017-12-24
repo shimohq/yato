@@ -156,7 +156,7 @@ Yato 会在每个请求结束或者超时后，更新断路器的状态，指标
 
 buckets => 每隔固定时间产生一个 bucket，每个 bucket 记录这段时间内所有请求的状态, buckets 数量有上限，达到上限后要将最早的 bucket 扔掉
 
-bucket 的产生 => setInterval 每隔一段时间产生一个 bucket
+bucket 的产生 => 每隔一段时间产生一个 bucket
 
 state => OPEN / HALF_OPEN / CLOSED
 
