@@ -4,17 +4,17 @@ import BucketList from './BucketList'
 
 export enum State {Open = 'open', HalfOpen = 'halfOpen', Closed = 'closed'}
 
-export interface IStateManagerOptions {
+export interface ICircuitBreakerOptions {
   volumeThreshold: number,
   errorThreshold: number,
   windowDuration: number,
   sleepWindow: number
 }
 
-export default class StateManager {
+export default class CircuitBreaker {
   private state: State = State.Closed
 
-  constructor (private emitter: EventEmitter, private options: IStateManagerOptions) {
+  constructor (private emitter: EventEmitter, private options: ICircuitBreakerOptions) {
   }
 
   public getState (): State {
