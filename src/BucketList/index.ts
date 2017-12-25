@@ -49,7 +49,6 @@ export default class BucketList {
    */
   public collect (category: BucketCategory, runtime: number): void {
     const {currentBucket, onNewRuntimeCollected} = this
-    console.log(currentBucket)
     currentBucket.increaseValue(category)
     currentBucket.runTimes.push(runtime)
     onNewRuntimeCollected()
@@ -63,5 +62,9 @@ export default class BucketList {
     return this.buckets
       .reduce((logs: number[], bucket) => logs.concat(bucket.runTimes), [])
       .sort((x, y) => x - y)
+  }
+
+  public reset (): void {
+    this.buckets = [new Bucket()]
   }
 }
