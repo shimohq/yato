@@ -7,7 +7,8 @@ export enum State {Open = 'open', HalfOpen = 'halfOpen', Closed = 'closed'}
 export interface IStateManagerOptions {
   volumeThreshold: number,
   errorThreshold: number,
-  windowDuration: number
+  windowDuration: number,
+  sleepWindow: number
 }
 
 export default class StateManager {
@@ -33,6 +34,8 @@ export default class StateManager {
         if (lastCommandFailed) {
           this.setState(State.Open, metrics)
         } else {
+          // clear old bucket.
+          bucketList.reset()
           this.setState(State.Closed)
         }
 
@@ -48,7 +51,7 @@ export default class StateManager {
             if (this.state === State.Open) {
               this.openHalf()
             }
-          }, this.options.windowDuration)
+          }, this.options.sleepWindow)
         }
 
         break

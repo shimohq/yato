@@ -114,7 +114,7 @@ Yato 支持订阅一些重要的事件:
 
 #### windowDuration
 
-这个配置十分重要，它决定着一个 bucket 可以存在多久，以及断路器打开多久后切换为半打开状态
+这个配置十分重要，它决定着一个 bucket 可以存在多久
 
 默认值为 10000，哦对了，这个值的单位是 ms
 
@@ -152,11 +152,17 @@ Yato 会在每个请求结束或者超时后，更新断路器的状态，指标
 
 默认值为 5
 
+#### sleepWindow
+
+窗口睡眠时间，即断路器打开多久后切换为半打开状态
+
+默认值为 5000 ms
+
 ## 关于断路器
 
 buckets => 每隔固定时间产生一个 bucket，每个 bucket 记录这段时间内所有请求的状态, buckets 数量有上限，达到上限后要将最早的 bucket 扔掉
 
-bucket 的产生 => setInterval 每隔一段时间产生一个 bucket
+bucket 的产生 => 每隔一段时间产生一个 bucket
 
 state => OPEN / HALF_OPEN / CLOSED
 

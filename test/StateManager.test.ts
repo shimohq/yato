@@ -5,6 +5,7 @@ import StateManager, {State} from '../src/StateManager'
 function factory (): StateManager {
   return new StateManager(new EventEmitter(), {
     errorThreshold: 0,
+    sleepWindow: 0,
     volumeThreshold: 0,
     windowDuration: 0
   })

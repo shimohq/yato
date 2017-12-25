@@ -12,7 +12,8 @@ const DEFAULT_OPTIONS = {
   numBuckets: 10, // number
   timeoutDuration: 3000, // ms
   volumeThreshold: 5, // 超过这个量的请求数量，bucket 数据才有意义
-  windowDuration: 10000 // ms
+  windowDuration: 10000, // ms
+  sleepWindow: 5000 //ms
 }
 
 export interface IYatoOptions extends IBucketListOptions, IStateManagerOptions {
@@ -41,7 +42,8 @@ export default class Yato extends EventEmitter {
     this.stateManager = new StateManager(this, {
       errorThreshold: yatoOptions.errorThreshold,
       volumeThreshold: yatoOptions.volumeThreshold,
-      windowDuration: yatoOptions.windowDuration
+      windowDuration: yatoOptions.windowDuration,
+      sleepWindow: yatoOptions.sleepWindow
     })
     this.bucketList = new BucketList({
       numBuckets: yatoOptions.numBuckets,

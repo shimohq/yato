@@ -10,22 +10,28 @@ export {BucketCategory, Bucket}
 
 export default class BucketList {
   private buckets: Bucket[] = [new Bucket()]
+  private numBuckets: number
+  private bucketDuration: number
+
+  private maybeAddBucket (): void {
+    const timeDiff = Date.now() - this.buckets[this.buckets.length - 1].startedAt
+    if (timeDiff > this.bucketDuration) {
+      this.buckets = this.buckets.concat(Array(Math.floor(timeDiff / this.bucketDuration)).fill(new Bucket()))
+      this.buckets.length > this.numBuckets && this.buckets.splice(0, this.buckets.length - this.numBuckets)
+    }
+  }
+
   constructor (options: IBucketListOptions, private onNewRuntimeCollected: () => void) {
     if (options.numBuckets <= 0) {
       throw new Error(`Expect "numBuckets" to be positive, got ${options.numBuckets}`)
     }
 
-    const bucketDuration = options.windowDuration / options.numBuckets
-    setInterval(() => {
-      this.buckets.push(new Bucket())
-
-      if (this.buckets.length > options.numBuckets) {
-        this.buckets.shift()
-      }
-    }, bucketDuration)
+    this.numBuckets = options.numBuckets
+    this.bucketDuration = options.windowDuration / options.numBuckets
   }
 
   get currentBucket (): Bucket {
+    this.maybeAddBucket()
     return this.buckets[this.buckets.length - 1]
   }
 
@@ -56,5 +62,9 @@ export default class BucketList {
     return this.buckets
       .reduce((logs: number[], bucket) => logs.concat(bucket.runTimes), [])
       .sort((x, y) => x - y)
+  }
+
+  public reset (): void {
+    this.buckets = [new Bucket()]
   }
 }
