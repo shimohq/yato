@@ -10,12 +10,11 @@ export {BucketCategory, Bucket}
 
 export default class BucketList {
   private buckets: Bucket[] = [new Bucket()]
-  private lastBucketCreateTime: number = Date.now()
   private numBuckets: number
   private bucketDuration: number
 
   private maybeAddBucket (): void {
-    const timeDiff = Date.now() - this.lastBucketCreateTime
+    const timeDiff = Date.now() - this.buckets[this.buckets.length - 1].startedAt
     if (timeDiff > this.bucketDuration) {
       this.buckets = this.buckets.concat(Array(Math.floor(timeDiff / this.bucketDuration)).fill(new Bucket()))
       this.buckets.length > this.numBuckets && this.buckets.splice(0, this.buckets.length - this.numBuckets)
@@ -32,6 +31,7 @@ export default class BucketList {
   }
 
   get currentBucket (): Bucket {
+    this.maybeAddBucket()
     return this.buckets[this.buckets.length - 1]
   }
 
@@ -48,8 +48,8 @@ export default class BucketList {
    * @memberof BucketList
    */
   public collect (category: BucketCategory, runtime: number): void {
-    this.maybeAddBucket()
     const {currentBucket, onNewRuntimeCollected} = this
+    console.log(currentBucket)
     currentBucket.increaseValue(category)
     currentBucket.runTimes.push(runtime)
     onNewRuntimeCollected()

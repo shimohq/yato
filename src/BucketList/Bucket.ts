@@ -10,6 +10,7 @@ export default class Bucket {
   public successes: number = 0
   public timeouts: number = 0
   public shortCircuits: number = 0
+  public startedAt: number = Date.now()
 
   public runTimes: number[] = []
 
