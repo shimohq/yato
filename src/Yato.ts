@@ -2,7 +2,7 @@
 import {EventEmitter} from 'events'
 import BucketList, {Bucket, IBucketListOptions} from './BucketList'
 import Metrics from './BucketList/Metrics'
-import StateManager, {IStateManagerOptions, State} from './StateManager'
+import CircuitBreaker, {ICircuitBreakerOptions, State} from './CircuitBreaker'
 import {Command, executeCommand} from './utils'
 
 export type FallbackFunction = () => any
@@ -16,7 +16,7 @@ const DEFAULT_OPTIONS = {
   sleepWindow: 5000 //ms
 }
 
-export interface IYatoOptions extends IBucketListOptions, IStateManagerOptions {
+export interface IYatoOptions extends IBucketListOptions, ICircuitBreakerOptions {
   timeoutDuration: number
 }
 
@@ -31,7 +31,7 @@ export interface IStats extends Metrics {
 
 export default class Yato extends EventEmitter {
   private bucketList: BucketList
-  private stateManager: StateManager
+  private circuitBreaker: CircuitBreaker
   private timeoutDuration: number
 
   constructor (options = {}) {
@@ -39,7 +39,7 @@ export default class Yato extends EventEmitter {
 
     const yatoOptions: IYatoOptions = Object.assign({}, DEFAULT_OPTIONS, options)
 
-    this.stateManager = new StateManager(this, {
+    this.circuitBreaker = new CircuitBreaker(this, {
       errorThreshold: yatoOptions.errorThreshold,
       volumeThreshold: yatoOptions.volumeThreshold,
       windowDuration: yatoOptions.windowDuration,
@@ -49,7 +49,7 @@ export default class Yato extends EventEmitter {
       numBuckets: yatoOptions.numBuckets,
       windowDuration: yatoOptions.windowDuration
     }, () => {
-      this.stateManager.updateState(this.bucketList)
+      this.circuitBreaker.updateState(this.bucketList)
       if (this.listenerCount('collect') > 0) {
         this.emit('collect', this.getStats())
       }
@@ -92,7 +92,7 @@ export default class Yato extends EventEmitter {
    * @memberof Yato
    */
   public getState (): State {
-    return this.stateManager.getState()
+    return this.circuitBreaker.getState()
   }
 
   /**
@@ -106,7 +106,7 @@ export default class Yato extends EventEmitter {
   }
 
   public getStats (): IStats {
-    return generateStats(this.stateManager.getState(), this.bucketList)
+    return generateStats(this.circuitBreaker.getState(), this.bucketList)
   }
 }
 
