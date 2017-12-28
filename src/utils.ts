@@ -1,4 +1,4 @@
-import BucketList, {BucketCategory} from './BucketList'
+import BucketList, { BucketCategory } from './BucketList'
 
 const TIMEOUT_INDICATOR = 'request timeout'
 

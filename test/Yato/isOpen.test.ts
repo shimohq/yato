@@ -1,7 +1,7 @@
 import test from 'ava'
-import {noop} from 'lodash'
+import { noop } from 'lodash'
 import Yato from '../../src/Yato'
-import {fail, success} from './command'
+import { fail, success } from './command'
 
 test('isOpen is false when errors are below the errorThreshold', async (t) => {
   const yato = new Yato({

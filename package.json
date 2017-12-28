@@ -7,7 +7,7 @@
   "scripts": {
     "test": "npm run lint && npm run build && nyc --reporter=html --reporter=text ava -- 'dist/test/**/*.test.js'",
     "build": "tsc",
-    "lint": "tslint -c tslint.json 'src/**/*.ts', 'test/**/*.ts'"
+    "lint": "tslint -c tslint.json 'src/**/*.ts' 'test/**/*.ts'"
   },
   "files": [
     "dist/src"
@@ -29,6 +29,7 @@
     "nyc": "^11.3.0",
     "standard": "^10.0.3",
     "tslint": "^5.8.0",
+    "tslint-eslint-rules": "^4.1.1",
     "typescript": "^2.6.2"
   }
 }

@@ -1,12 +1,12 @@
 import test from 'ava'
-import {last, noop, pick} from 'lodash'
-import Yato, {State} from '../../src/Yato'
-import {fail, success, timeout} from './command'
+import { last, noop, pick } from 'lodash'
+import Yato, { State } from '../../src/Yato'
+import { fail, success, timeout } from './command'
 
 const timeoutDuration = 1
 
 test('returns right stats data', async (t) => {
-  const yato = new Yato({timeoutDuration})
+  const yato = new Yato({ timeoutDuration })
 
   await Promise.all([
     yato.run(success),

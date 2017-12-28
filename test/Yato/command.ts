@@ -1,4 +1,4 @@
-import {noop} from 'lodash'
+import { noop } from 'lodash'
 
 export const fail = () => Promise.reject(new Error('reject'))
 export const success = () => Promise.resolve('resolve')

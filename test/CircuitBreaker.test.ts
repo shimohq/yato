@@ -1,6 +1,6 @@
 import test from 'ava'
-import {EventEmitter} from 'events'
-import CircuitBreaker, {State} from '../src/CircuitBreaker'
+import { EventEmitter } from 'events'
+import CircuitBreaker, { State } from '../src/CircuitBreaker'
 
 function factory (): CircuitBreaker {
   return new CircuitBreaker(new EventEmitter(), {
