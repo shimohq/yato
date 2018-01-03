@@ -1,26 +1,25 @@
-/// <reference types="node" />
-import {EventEmitter} from 'events'
-import BucketList, {Bucket, IBucketListOptions} from './BucketList'
+import { EventEmitter } from 'events'
+import BucketList, { Bucket, IBucketListOptions } from './BucketList'
 import Metrics from './BucketList/Metrics'
-import CircuitBreaker, {ICircuitBreakerOptions, State} from './CircuitBreaker'
-import {Command, executeCommand} from './utils'
+import CircuitBreaker, { ICircuitBreakerOptions, State } from './CircuitBreaker'
+import { Command, executeCommand } from './utils'
 
 export type FallbackFunction = () => any
 
 const DEFAULT_OPTIONS = {
   errorThreshold: 50, // percentage
   numBuckets: 10, // number
+  sleepWindow: 5000, // ms
   timeoutDuration: 3000, // ms
   volumeThreshold: 5, // 超过这个量的请求数量，bucket 数据才有意义
   windowDuration: 10000, // ms
-  sleepWindow: 5000 //ms
 }
 
 export interface IYatoOptions extends IBucketListOptions, ICircuitBreakerOptions {
   timeoutDuration: number
 }
 
-export {State}
+export { State }
 
 export interface IStats extends Metrics {
   latencyMean: number,
@@ -41,9 +40,9 @@ export default class Yato extends EventEmitter {
 
     this.circuitBreaker = new CircuitBreaker(this, {
       errorThreshold: yatoOptions.errorThreshold,
+      sleepWindow: yatoOptions.sleepWindow,
       volumeThreshold: yatoOptions.volumeThreshold,
       windowDuration: yatoOptions.windowDuration,
-      sleepWindow: yatoOptions.sleepWindow
     })
     this.bucketList = new BucketList({
       numBuckets: yatoOptions.numBuckets,

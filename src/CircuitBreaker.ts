@@ -1,5 +1,4 @@
-/// <reference types="node" />
-import {EventEmitter} from 'events'
+import { EventEmitter } from 'events'
 import BucketList from './BucketList'
 
 export enum State {Open = 'open', HalfOpen = 'halfOpen', Closed = 'closed'}

@@ -8,7 +8,7 @@ export default class Metrics {
   private timeouts: number = 0
   private shortCircuits: number = 0
 
-  public involve ({errorCount, totalCount, failures, timeouts, successes, shortCircuits}: Bucket): Metrics {
+  public involve ({ errorCount, totalCount, failures, timeouts, successes, shortCircuits }: Bucket): Metrics {
     this.errorCount += errorCount
     this.totalCount += totalCount
     this.failures += failures

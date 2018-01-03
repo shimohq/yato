@@ -1,11 +1,11 @@
 import test from 'ava'
 import isPromise = require('is-promise')
-import {last, noop, pick} from 'lodash'
-import Yato, {State} from '../../src/Yato'
-import {fail, success, timeout} from './command'
+import { last, noop, pick } from 'lodash'
+import Yato, { State } from '../../src/Yato'
+import { fail, success, timeout } from './command'
 
 async function createdOpenYato (options: object = {}): Promise<Yato> {
-  const yato = new Yato(Object.assign(options, {volumeThreshold: 0}))
+  const yato = new Yato(Object.assign(options, { volumeThreshold: 0 }))
   await yato.run(fail).catch(noop)
   if (!yato.isOpen()) {
     throw new Error('not open')
@@ -31,14 +31,14 @@ test('resolves with fallback when breaker is open', async (t) => {
 })
 
 test('switches to halfOpen after windowDuration', async (t) => {
-  const yato = await createdOpenYato({windowDuration: 1})
+  const yato = await createdOpenYato({ windowDuration: 1 })
   await new Promise((resolve) => yato.once('halfOpen', resolve))
 
   t.is(yato.getState(), State.HalfOpen)
 })
 
 test('halfOpen -> open when fails', async (t) => {
-  const yato = await createdOpenYato({windowDuration: 1})
+  const yato = await createdOpenYato({ windowDuration: 1 })
   await new Promise((resolve) => yato.once('halfOpen', resolve))
 
   await yato.run(fail).catch(noop)
@@ -47,7 +47,7 @@ test('halfOpen -> open when fails', async (t) => {
 })
 
 test('halfOpen -> close when successes', async (t) => {
-  const yato = await createdOpenYato({windowDuration: 1})
+  const yato = await createdOpenYato({ windowDuration: 1 })
   await new Promise((resolve) => yato.once('halfOpen', resolve))
 
   await yato.run(success)

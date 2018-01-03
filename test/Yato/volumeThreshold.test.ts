@@ -1,10 +1,10 @@
 import test from 'ava'
-import {last, noop, pick} from 'lodash'
+import { last, noop, pick } from 'lodash'
 import Yato from '../../src/Yato'
-import {fail, success} from './command'
+import { fail, success } from './command'
 
 test('keeps closed when volumeThreshold not reached', async (t) => {
-  const yato = new Yato({volumeThreshold: 2})
+  const yato = new Yato({ volumeThreshold: 2 })
 
   await Promise.all([
     yato.run(fail).catch(noop),
