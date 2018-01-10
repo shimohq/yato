@@ -53,6 +53,7 @@ export default class Yato extends EventEmitter {
         this.emit('collect', this.getStats())
       }
     })
+    this.timeoutDuration = yatoOptions.timeoutDuration
   }
 
   /**
