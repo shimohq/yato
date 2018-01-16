@@ -63,9 +63,13 @@ export default class BucketList {
   private maybeAddBucket (): void {
     const timeDiff = Date.now() - this.buckets[this.buckets.length - 1].startedAt
     if (timeDiff > this.bucketDuration) {
-      this.buckets = this.buckets.concat(Array(Math.floor(timeDiff / this.bucketDuration)).fill(new Bucket()))
-      if (this.buckets.length > this.numBuckets) {
-        this.buckets.splice(0, this.buckets.length - this.numBuckets)
+      const shouldAddAmount = Math.floor(timeDiff / this.bucketDuration)
+      const currentAmount = this.buckets.length
+      const removeAmount = currentAmount + shouldAddAmount - this.numBuckets
+      removeAmount > 0 && this.buckets.splice(0, removeAmount)
+      const addAmount = removeAmount > 0 ? removeAmount : shouldAddAmount
+      for (let i = 0; i < addAmount; i++) {
+        this.buckets.push(new Bucket())
       }
     }
   }
