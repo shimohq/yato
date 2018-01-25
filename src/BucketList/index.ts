@@ -65,7 +65,8 @@ export default class BucketList {
     if (timeDiff > this.bucketDuration) {
       const shouldAddAmount = Math.floor(timeDiff / this.bucketDuration)
       const currentAmount = this.buckets.length
-      const removeAmount = currentAmount + shouldAddAmount - this.numBuckets
+      const outOfAmount = currentAmount + shouldAddAmount - this.numBuckets
+      const removeAmount = outOfAmount > this.numBuckets ? this.numBuckets : outOfAmount
       if (removeAmount > 0) {
         this.buckets.splice(0, removeAmount)
       }
