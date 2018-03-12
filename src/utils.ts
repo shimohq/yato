@@ -8,8 +8,9 @@ export function executeCommand (command: Command, bucketList: BucketList, timeou
   const getRunTime = () => Date.now() - startTime
 
   const commandPromise = command()
+  let timer: NodeJS.Timer
   const timeoutPromise = new Promise((resolve) => {
-    setTimeout(resolve, timeoutDuration, TIMEOUT_INDICATOR)
+    timer = global.setTimeout(resolve, timeoutDuration, TIMEOUT_INDICATOR)
   })
 
   // command 和 timeout 竞争
@@ -19,6 +20,7 @@ export function executeCommand (command: Command, bucketList: BucketList, timeou
       bucketList.collect(BucketCategory.Timeouts, getRunTime())
       throw new Error('Timeout')
     }
+    clearTimeout(timer)
     // 记录成功
     bucketList.collect(BucketCategory.Successes, getRunTime())
     return data

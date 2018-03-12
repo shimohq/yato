@@ -4,7 +4,7 @@ import Metrics from './BucketList/Metrics'
 import CircuitBreaker, { ICircuitBreakerOptions, State } from './CircuitBreaker'
 import { Command, executeCommand } from './utils'
 
-export type FallbackFunction = () => any
+export type FallbackFunction = (error: Error) => any
 
 const DEFAULT_OPTIONS = {
   errorThreshold: 50, // percentage
@@ -74,11 +74,11 @@ export default class Yato extends EventEmitter {
       // 非关闭状态，执行请求，并将其执行状况记录到最后一个 bucket 里
       return executeCommand(command, this.bucketList, this.timeoutDuration)
         // 如果超时或者响应失败，执行 fallback
-        .catch((error: Error) => fallbackContainer() || Promise.reject(error))
+        .catch((error: Error) => fallbackContainer(error))
     }
     this.currentBucket.shortCircuits += 1
 
-    return fallbackContainer() || Promise.reject(new Error('Bad Request!'))
+    return fallbackContainer(new Error('Bad Request!'))
   }
 
   get currentBucket (): Bucket {
@@ -141,9 +141,5 @@ function generateStats (state: State, bucketList: BucketList): IStats {
   })
 }
 
-const createFallbackContainer = (fallback?: FallbackFunction) => (): Promise<any> | false => {
-  if (fallback) {
-    return Promise.resolve(fallback())
-  }
-  return false
-}
+const createFallbackContainer = (fallback?: FallbackFunction) => (error: Error): Promise<any> =>
+    fallback ? Promise.resolve(fallback(error)) : Promise.reject(error)
