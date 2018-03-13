@@ -37,13 +37,16 @@ test('switches to halfOpen after windowDuration', async (t) => {
   t.is(yato.getState(), State.HalfOpen)
 })
 
-test('halfOpen -> open when fails', async (t) => {
+test('halfOpen -> open when fails, and then switch to halfOpen after windowDuration', async (t) => {
   const yato = await createdOpenYato({ windowDuration: 1 })
   await new Promise((resolve) => yato.once('halfOpen', resolve))
 
   await yato.run(fail).catch(noop)
   t.is(yato.getState(), State.Open)
   t.true(yato.isOpen())
+  await new Promise((resolve) => yato.once('halfOpen', resolve))
+  t.is(yato.getState(), State.HalfOpen)
+  t.false(yato.isOpen())
 })
 
 test('halfOpen -> close when successes', async (t) => {
