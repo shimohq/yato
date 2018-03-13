@@ -45,12 +45,6 @@ export default class CircuitBreaker {
         // CLOSED -> OPEN
         if (metrics.overThreshold(this.options.errorThreshold, this.options.volumeThreshold)) {
           this.setState(State.Open, metrics)
-
-          setTimeout(() => {
-            if (this.state === State.Open) {
-              this.openHalf()
-            }
-          }, this.options.sleepWindow)
         }
 
         break
@@ -59,11 +53,18 @@ export default class CircuitBreaker {
   }
 
   private setState (state: State, arg?: any) {
+    if (state === State.Open) {
+      this.openHalfLater()
+    }
     this.state = state
     this.emitter.emit(state === State.Closed ? 'close' : state as string, arg)
   }
 
-  private openHalf (): void {
-    this.setState(State.HalfOpen)
+  private openHalfLater (): void {
+    setTimeout(() => {
+      if (this.state === State.Open) {
+        this.setState(State.HalfOpen)
+      }
+    }, this.options.sleepWindow)
   }
 }
